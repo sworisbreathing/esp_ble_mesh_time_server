@@ -22,7 +22,7 @@
 | ---: | :--- |
 |  esp\_err\_t | [**ble\_mesh\_time\_deinit**](#function-ble_mesh_time_deinit) (void) <br>_Deinitialises BLE Mesh Time functionality._ |
 |  esp\_err\_t | [**ble\_mesh\_time\_init**](#function-ble_mesh_time_init) ([**esp\_ble\_mesh\_time\_server\_config\_t**](#struct-esp_ble_mesh_time_server_config_t) config) <br>_Initialises BLE Mesh Time functionality._ |
-|  void | [**ble\_mesh\_time\_scene\_server\_cb**](#function-ble_mesh_time_scene_server_cb) (esp\_ble\_mesh\_time\_scene\_server\_cb\_event\_t event, esp\_ble\_mesh\_time\_scene\_server\_cb\_param\_t \*param) <br> |
+|  void | [**ble\_mesh\_time\_scene\_server\_cb**](#function-ble_mesh_time_scene_server_cb) (esp\_ble\_mesh\_time\_scene\_server\_cb\_event\_t event, esp\_ble\_mesh\_time\_scene\_server\_cb\_param\_t \*param) <br>_time server callback provided by this component_ |
 |  void | [**oob\_time\_updated**](#function-oob_time_updated) (uint8\_t uncertainty) <br>_Hook to update BLE Mesh Time state from an out-of-band time source (GPS, SNTP, etc)._ |
 
 ## Macros
@@ -111,6 +111,7 @@ The time server, time setup server, and state must be defined, and the state mus
 * error codes returned by `esp_timer_create`
 ### function `ble_mesh_time_scene_server_cb`
 
+_time server callback provided by this component_
 ```c
 void ble_mesh_time_scene_server_cb (
     esp_ble_mesh_time_scene_server_cb_event_t event,
@@ -118,6 +119,23 @@ void ble_mesh_time_scene_server_cb (
 ) 
 ```
 
+
+This callback should be registered via:
+
+
+````cpp
+esp_ble_mesh_register_time_scene_server_callback(ble_mesh_time_scene_server_cb);
+````
+
+
+
+
+
+**Parameters:**
+
+
+* `event` Event type 
+* `param` Pointer to callback parameter
 ### function `oob_time_updated`
 
 _Hook to update BLE Mesh Time state from an out-of-band time source (GPS, SNTP, etc)._

@@ -145,6 +145,18 @@ typedef struct {
   nvs_handle_t nvs_handle;
 } esp_ble_mesh_time_server_config_t;
 
+/**
+ * @brief time server callback provided by this component
+ *
+ * This callback should be registered via:
+ *
+ * ```c
+ * esp_ble_mesh_register_time_scene_server_callback(ble_mesh_time_scene_server_cb);
+ * ```
+ *
+ * @param[in] event Event type
+ * @param[in] param Pointer to callback parameter
+ */
 void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t event,
                                                 esp_ble_mesh_time_scene_server_cb_param_t *param);
 
