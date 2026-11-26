@@ -1,4 +1,5 @@
 #include "esp_check.h"
+#include "esp_err.h"
 #include "FreeRTOSConfig.h"
 
 #include "esp_ble_mesh_defs.h"
@@ -50,6 +51,11 @@ static esp_err_t ble_mesh_init(void)
         return err;
     }
 
+#ifdef CONFIG_IDF_TARGET
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_ble_mesh_set_unprovisioned_device_name(CONFIG_IDF_TARGET));
+#endif
+
+    ESP_LOGI(TAG, "enabling provisioning bearers");
     err = esp_ble_mesh_node_prov_enable((esp_ble_mesh_prov_bearer_t)(ESP_BLE_MESH_PROV_ADV | ESP_BLE_MESH_PROV_GATT));
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to enable mesh node (err %d)", err);
