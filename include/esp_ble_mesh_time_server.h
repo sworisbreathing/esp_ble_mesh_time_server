@@ -6,8 +6,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef APP_TIME_SCENE_SERVER_H_
-#define APP_TIME_SCENE_SERVER_H_
+#ifndef BLE_MESH_TIME_SCENE_SERVER_H_
+#define BLE_MESH_TIME_SCENE_SERVER_H_
 
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_time_scene_model_api.h"

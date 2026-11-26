@@ -23,7 +23,7 @@
 #include "ble_mesh_example_nvs.h"
 #include "nvs.h"
 
-#include "app/ble_mesh/time_scene_server.h"
+#include "esp_ble_mesh_time_server.h"
 
 #if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
 typedef struct {
@@ -51,7 +51,7 @@ static app_time_persist_state_t persist_state = {
 };
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
-static const char *TAG = "app/ble_mesh/time_scene_server.c";
+static const char *TAG = "ble_mesh_time";
 
 static int64_t last_status_publish_ts = 0;
 

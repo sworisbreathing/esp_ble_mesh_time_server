@@ -23,7 +23,7 @@
 #include "app/ble_mesh/config_server.h"
 #include "app/ble_mesh/generic_server.h"
 #include "app/ble_mesh/prov.h"
-#include "app/ble_mesh/time_scene_server.h"
+#include "esp_ble_mesh_time_server.h"
 
 #define CID_ESP 0x02E5
 

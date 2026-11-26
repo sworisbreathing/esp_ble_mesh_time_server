@@ -8,8 +8,8 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
-#include "app/ble_mesh/time_scene_server.h"
 #include "app/ble_mesh/prov.h"
+#include "esp_ble_mesh_time_server.h"
 
 static const char *TAG = "app/ble_mesh/prov.c";
 

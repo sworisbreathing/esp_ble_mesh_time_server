@@ -11,9 +11,9 @@
 #include "esp_netif_sntp.h"
 #include "esp_sntp.h"
 
-#include "app/ble_mesh/time_scene_server.h"
 #include "app/event_loop.h"
 #include "app/sntp.h"
+#include "esp_ble_mesh_time_server.h"
 
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 48
