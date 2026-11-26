@@ -62,6 +62,7 @@ static esp_err_t ble_mesh_init(void)
         return err;
     }
 
+    ESP_ERROR_CHECK_WITHOUT_ABORT(generic_server_init());
     ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init());
 
 #ifdef CONFIG_IDF_TARGET

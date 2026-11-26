@@ -1,5 +1,7 @@
 menu "Example Configuration"
 
+    orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+
     choice BLE_MESH_EXAMPLE_BOARD
         prompt "Board selection for BLE Mesh"
         default BLE_MESH_ESP_WROOM_32 if IDF_TARGET_ESP32
@@ -129,5 +131,42 @@ menu "Example Configuration"
         config SNTP_TIME_SYNC_METHOD_CUSTOM
             bool "custom implementation"
     endchoice
+
+    choice LED
+        prompt "LED type"
+        default LED_TYPE_GPIO
+        help
+            Select the LED type. A normal level controlled LED or an addressable LED strip.
+            The default selection is based on the Espressif DevKit boards.
+            You can change the default selection according to your board.
+
+        config LED_TYPE_GPIO
+            bool "GPIO"
+        config LED_TYPE_STRIP
+            bool "LED strip"
+    endchoice
+
+    choice LED_STRIP_BACKEND
+        depends on LED_TYPE_STRIP
+        prompt "LED strip backend peripheral"
+        default LED_STRIP_BACKEND_RMT if SOC_RMT_SUPPORTED
+        default LED_STRIP_BACKEND_SPI
+        help
+            Select the backend peripheral to drive the LED strip.
+
+        config LED_STRIP_BACKEND_RMT
+            depends on SOC_RMT_SUPPORTED
+            bool "RMT"
+        config LED_STRIP_BACKEND_SPI
+            bool "SPI"
+    endchoice
+
+    config LED_GPIO
+        int "LED GPIO number"
+        range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+        default 8
+        help
+            GPIO number (IOxx) to blink on and off the LED.
+            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
 
 endmenu

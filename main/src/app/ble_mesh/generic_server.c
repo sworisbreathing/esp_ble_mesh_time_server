@@ -1,5 +1,6 @@
 #include "esp_ble_mesh_local_data_operation_api.h"
 #include "esp_ble_mesh_networking_api.h"
+#include "esp_check.h"
 #include "esp_log.h"
 
 #include "app/ble_mesh/coexist.h"
@@ -22,6 +23,107 @@ esp_ble_mesh_gen_onoff_srv_t onoff_server_0 = {
     },
 };
 
+#define LED_GPIO CONFIG_LED_GPIO
+
+#if CONFIG_LED_TYPE_STRIP
+#include "led_strip.h"
+
+static led_strip_handle_t led_strip;
+
+static void change_led_state(esp_ble_mesh_model_t *model,
+                                     esp_ble_mesh_msg_ctx_t *ctx, uint8_t onoff)
+{
+    uint16_t primary_addr = esp_ble_mesh_get_primary_element_address();
+    uint8_t elem_count = esp_ble_mesh_get_element_count();
+    uint8_t i;
+
+    if (ESP_BLE_MESH_ADDR_IS_UNICAST(ctx->recv_dst)) {
+        for (i = 0; i < elem_count; i++) {
+            if (ctx->recv_dst == (primary_addr + i)) {
+              if (onoff) {
+                ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_set_pixel(led_strip, 0, 16, 16, 16));
+                ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_refresh(led_strip));
+              } else {
+                ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_clear(led_strip));
+              }
+            }
+        }
+    } else if (ESP_BLE_MESH_ADDR_IS_GROUP(ctx->recv_dst)) {
+        if (esp_ble_mesh_is_model_subscribed_to_group(model, ctx->recv_dst)) {
+          if (onoff) {
+            ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_set_pixel(led_strip, 0, 16, 16, 16));
+            ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_refresh(led_strip));
+          } else {
+            ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_clear(led_strip));
+          }
+        }
+    } else if (ctx->recv_dst == 0xFFFF) {
+      if (onoff) {
+        ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_set_pixel(led_strip, 0, 16, 16, 16));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_refresh(led_strip));
+      } else {
+        ESP_ERROR_CHECK_WITHOUT_ABORT(led_strip_clear(led_strip));
+      }
+    }
+}
+
+esp_err_t generic_server_init(void) {
+  led_strip_config_t strip_config = {
+    .strip_gpio_num = LED_GPIO,
+    .max_leds = 1,
+  };
+
+#if CONFIG_LED_STRIP_BACKEND_RMT
+  led_strip_rmt_config_t rmt_config = {
+      .resolution_hz = 10 * 1000 * 1000, // 10MHz
+      .flags.with_dma = false,
+  };
+  ESP_RETURN_ON_ERROR(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip), TAG, "failed to init rmt device");
+#elif CONFIG_LED_STRIP_BACKEND_SPI
+  led_strip_spi_config_t spi_config = {
+    .spi_bus = SPI2_HOST,
+    .flags.with_dma = true,
+  };
+  ESP_RETURN_ON_ERROR(led_strip_new_spi_device(&strip_config, &spi_config, &led_strip), TAG, "failed to init spi device");
+#else
+#error "unsupported LED strip backend"
+#endif /* CONFIG_LED_STRIP_BACKEND_SPI */
+
+  ESP_RETURN_ON_ERROR(led_strip_clear(led_strip), TAG, "failed to clear led strip");
+  return ESP_OK;
+}
+
+#elif CONFIG_LED_TYPE_GPIO
+#include "driver/gpio.h"
+
+static void change_led_state(esp_ble_mesh_model_t *model,
+                                     esp_ble_mesh_msg_ctx_t *ctx, uint8_t onoff)
+{
+    uint16_t primary_addr = esp_ble_mesh_get_primary_element_address();
+    uint8_t elem_count = esp_ble_mesh_get_element_count();
+    uint8_t i;
+
+    if (ESP_BLE_MESH_ADDR_IS_UNICAST(ctx->recv_dst)) {
+        for (i = 0; i < elem_count; i++) {
+            if (ctx->recv_dst == (primary_addr + i)) {
+              ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_set_level(LED_GPIO, !onoff));
+            }
+        }
+    } else if (ESP_BLE_MESH_ADDR_IS_GROUP(ctx->recv_dst)) {
+        if (esp_ble_mesh_is_model_subscribed_to_group(model, ctx->recv_dst)) {
+          ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_set_level(LED_GPIO, !onoff));
+        }
+    } else if (ctx->recv_dst == 0xFFFF) {
+      ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_set_level(LED_GPIO, !onoff));
+    }
+}
+
+esp_err_t generic_server_init(void) {
+  ESP_RETURN_ON_ERROR(gpio_reset_pin(LED_GPIO), TAG, "failed to reset gpio pin");
+  ESP_RETURN_ON_ERROR(gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT), TAG, "failed to set gpio direction");
+  return ESP_OK;
+}
+#else
 static void change_led_state(esp_ble_mesh_model_t *model,
                                      esp_ble_mesh_msg_ctx_t *ctx, uint8_t onoff)
 {
@@ -46,6 +148,11 @@ static void change_led_state(esp_ble_mesh_model_t *model,
                  (int)(model->element->element_addr - primary_addr), onoff ? "ON" : "OFF");
     }
 }
+
+esp_err_t generic_server_init(void) {
+  return ESP_OK;
+}
+#endif
 
 static void handle_gen_onoff_msg(esp_ble_mesh_model_t *model,
                                          esp_ble_mesh_msg_ctx_t *ctx,

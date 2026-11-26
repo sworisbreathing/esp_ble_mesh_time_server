@@ -21,6 +21,8 @@ extern esp_ble_mesh_gen_onoff_srv_t onoff_server_0;
 void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
                                                esp_ble_mesh_generic_server_cb_param_t *param);
 
+esp_err_t generic_server_init(void);
+
 #ifdef __cplusplus
 }
 #endif
