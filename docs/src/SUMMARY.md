@@ -7,7 +7,7 @@
 # User Guide
 
 - [Time Server](guide.md)
-- [FAQs](faq.md)
+- [FAQs / Troubleshooting](faq.md)
 
 ---
 
