@@ -28,6 +28,10 @@ static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 ESP_BLE_MESH_MODEL_PUB_DEFINE(time_server_pub, MAX_TIME_SERVER_MSG_SIZE, ROLE_NODE);
 ESP_BLE_MESH_MODEL_PUB_DEFINE(onoff_pub_0, MAX_ONOFF_MESSAGE_SIZE, ROLE_NODE);
 
+ESP_BLE_MESH_TIME_STATE_DEFINE(time_state);
+ESP_BLE_MESH_TIME_SRV_DEFINE(time_server, &time_state);
+ESP_BLE_MESH_TIME_SETUP_SRV_DEFINE(time_setup_server, &time_state);
+
 static esp_ble_mesh_model_t root_models[] = {
     ESP_BLE_MESH_MODEL_CFG_SRV(&config_server),
     ESP_BLE_MESH_MODEL_TIME_SRV(&time_server_pub, &time_server),
@@ -66,7 +70,7 @@ static esp_err_t ble_mesh_init(void)
     }
 
     ESP_ERROR_CHECK_WITHOUT_ABORT(generic_server_init());
-    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init());
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init(&time_server, &time_setup_server));
 
 #ifdef CONFIG_IDF_TARGET
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_ble_mesh_set_unprovisioned_device_name(CONFIG_IDF_TARGET));
