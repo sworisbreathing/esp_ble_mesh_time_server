@@ -159,6 +159,25 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
   return res;
 }
 
+static bool set_timezone(uint8_t timezone) {
+  char tz_str[14];
+  int16_t tz_offset = ((int16_t) timezone - TIME_ZONE_OFFSET_ZERO) * 15;
+  int16_t tz_hrs = tz_offset / 60;
+  int16_t tz_mins = tz_offset < 0 ? -1 * tz_offset % 60 : tz_offset % 60;
+  if (sprintf(tz_str, "<%+03d%02d>%d:%02d", tz_hrs, tz_mins, -1 * tz_hrs, tz_mins) >= 0) {
+    if (setenv("TZ", tz_str, 1) == 0) {
+      tzset();
+      ESP_LOGI(TAG, "time zone updated to %s (%s)", tz_str, tzname[0]);
+      return true;
+    } else {
+      ESP_LOGW(TAG, "failed to set TZ=%s", tz_str);
+    }
+  } else {
+    ESP_LOGW(TAG, "failed to set timezone string: %+02d:%02d: %d", tz_hrs, tz_mins, errno);
+  }
+  return false;
+}
+
 static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_status) {
   struct timeval tm = {0};
   char err_str[6];
@@ -188,7 +207,6 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
     esp_ble_mesh_time_zone_status_cb_t tz_status_msg = {0};
     esp_ble_mesh_tai_utc_delta_status_cb_t tai_delta_status_msg = {0};
     esp_ble_mesh_time_role_status_cb_t time_role_status_msg = {0};
-    char tz_str[14];
     switch(ctx->recv_op) {
       case ESP_BLE_MESH_MODEL_OP_TIME_SET:
         set_time(value->set.time.tai_seconds,
@@ -206,19 +224,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_SET:
         // TODO handle scheduled time zone change
-        int16_t tz_offset = ((int16_t) value->set.time_zone.time_zone_offset_new - TIME_ZONE_OFFSET_ZERO) * 15;
-        int16_t tz_hrs = tz_offset / 60;
-        int16_t tz_mins = tz_offset < 0 ? -1 * tz_offset % 60 : tz_offset % 60;
-        if (sprintf(tz_str, "<%+03d%02d>%d:%02d", tz_hrs, tz_mins, -1 * tz_hrs, tz_mins) >= 0) {
-          if (setenv("TZ", tz_str, 1) == 0) {
-            tzset();
-            ESP_LOGI(TAG, "time zone updated to %s (%s)", tz_str, tzname[0]);
-          } else {
-            ESP_LOGW(TAG, "failed to set TZ=%s", tz_str);
-          }
-        } else {
-          ESP_LOGW(TAG, "failed to set timezone string: %+02d:%02d: %d", tz_hrs, tz_mins, errno);
-        }
+        set_timezone(value->set.time_zone.time_zone_offset_new);
         time_state.time.time_zone_offset_curr = value->set.time_zone.time_zone_offset_new;
         memcpy(value->set.time_zone.tai_zone_change, time_state.time.tai_zone_change, sizeof(time_state.time.tai_zone_change));
         memcpy(&time_state.time.tai_zone_change, tz_status_msg.tai_zone_change, sizeof(tz_status_msg.tai_zone_change));
@@ -397,6 +403,8 @@ esp_err_t ble_mesh_time_init(void) {
   time_state.time.uncertainty = persist_state.uncertainty;
   memcpy(persist_state.tai_delta_change, time_state.time.tai_delta_change, sizeof(persist_state.tai_delta_change));
   memcpy(persist_state.tai_zone_change, time_state.time.tai_zone_change, sizeof(persist_state.tai_zone_change));
+
+  set_timezone(persist_state.time_zone_offset_curr);
   return ESP_OK;
 
 }
