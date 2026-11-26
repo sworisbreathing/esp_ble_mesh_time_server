@@ -183,6 +183,7 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     tai_seconds[3] == 0x00 &&
     tai_seconds[4] == 0x00
   )) {
+    bool has_pending_tz_update = esp_timer_is_active(tz_update_timer);
     char err_str[6];
     struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
     if (settimeofday(&t, NULL) != 0) {
@@ -190,7 +191,9 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
       ESP_LOGE(TAG, "failed to set system time: %s", err_str);
       return false;
     }
-    set_timezone(time_state.time.time_zone_offset_new, time_state.time.tai_zone_change, true);
+    if (has_pending_tz_update) {
+      set_timezone(time_state.time.time_zone_offset_new, time_state.time.tai_zone_change, true);
+    }
 
     res = true;
     struct tm t1 = {0};
@@ -452,7 +455,18 @@ esp_err_t ble_mesh_time_init(void) {
     set_timezone(persist_state.time_zone_offset_curr, NULL, false);
 
     //reschedule tz update
-    set_timezone(persist_state.time_zone_offset_new, persist_state.tai_zone_change, false);
+    if (!(persist_state.tai_zone_change[0] == 0x00 &&
+          persist_state.tai_zone_change[1] == 0x00 &&
+          persist_state.tai_zone_change[2] == 0x00 &&
+          persist_state.tai_zone_change[3] == 0x00 &&
+          persist_state.tai_zone_change[4] == 0x00
+    )) {
+      set_timezone(persist_state.time_zone_offset_new, persist_state.tai_zone_change, false);
+    } else {
+      esp_timer_stop_blocking(tz_update_timer, pdMS_TO_TICKS(1000));
+      time_state.time.time_zone_offset_new = time_state.time.time_zone_offset_curr;
+      memset(time_state.time.tai_zone_change, 0x00, sizeof(time_state.time.tai_zone_change));
+    }
   }
   return ESP_OK;
 
