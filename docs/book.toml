@@ -1,0 +1,8 @@
+[book]
+title = "ESP BLE Mesh Time Server Documentation"
+language = "en"
+
+[output.html]
+default-theme = "dark"
+git-repository-url = "https://github.com/sworisbreathing/esp_ble_mesh_time_server"
+edit-url-template = "https://github.com/sworisbreathing/esp_ble_mesh_time_server/edit/main/docs/{path}"

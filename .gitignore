@@ -84,3 +84,6 @@ sdkconfig
 sdkconfig.old
 dependencies.lock
 .cache/
+
+# doxygen outputs (because automation will update markdown sources in git instead)
+doxygen_output/
