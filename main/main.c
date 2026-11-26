@@ -17,6 +17,7 @@
 #include "board.h"
 #include "app/nvs_flash.h"
 #include "app/ble_mesh.h"
+#include "app/wifi.h"
 
 #define TAG "main.c"
 
@@ -30,4 +31,7 @@ void app_main(void)
 
     /* Initialize the Bluetooth Mesh Subsystem */
     ESP_ERROR_CHECK(app_ble_mesh_init());
+
+    /* Initialize Wi-Fi */
+    ESP_ERROR_CHECK(initialise_wifi());
 }
