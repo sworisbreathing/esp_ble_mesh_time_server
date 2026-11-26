@@ -45,7 +45,13 @@ static esp_ble_mesh_time_state_t time_state = {
   .time_role = ESP_BLE_MESH_TIME_NONE,
 };
 
-static app_time_persist_state_t persist_state = {0};
+static app_time_persist_state_t persist_state = {
+  .time_zone_offset_curr = TIME_ZONE_OFFSET_ZERO,
+  .time_zone_offset_new = TIME_ZONE_OFFSET_ZERO,
+  .tai_utc_delta_curr = TAI_DELTA_ZERO + 37,
+  .tai_utc_delta_new = TAI_DELTA_ZERO + 37,
+  .time_role = ESP_BLE_MESH_TIME_NONE,
+};
 
 extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
