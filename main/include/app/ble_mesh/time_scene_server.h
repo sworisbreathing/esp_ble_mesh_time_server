@@ -118,6 +118,13 @@ void oob_time_updated(uint8_t uncertainty);
  */
 esp_err_t ble_mesh_time_init(esp_ble_mesh_time_server_config_t config);
 
+/**
+ * @brief Deinitialises BLE Mesh Time functionality.
+ *
+ * @note this is a best-effort cleanup routine
+ *
+ * @return ESP_OK on success, otherwise the relevant error code
+ */
 esp_err_t ble_mesh_time_deinit(void);
 
 #ifdef __cplusplus
