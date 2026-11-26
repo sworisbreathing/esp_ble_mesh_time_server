@@ -26,14 +26,6 @@ extern "C" {
 #define MAX_TIME_SERVER_MSG_SIZE 11
 
 /**
- * @brief Max message size for time setup server.
- *
- * @note Max message sizes are calculated from message descriptions in section 5.2.1
- * of the BLE Mesh spec, v1.1.1.
- */
-#define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
-
-/**
  * @brief UTC time of the TAI epoch, in seconds.
  *
  * @note TAI epoch is `2000-01-01T00:00:00`, which corresponds to UTC time `1999-12-31T23:59:28`.

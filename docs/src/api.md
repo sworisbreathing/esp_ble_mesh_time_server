@@ -34,7 +34,6 @@
 | define  | [**ESP\_BLE\_MESH\_TIME\_SRV\_DEFINE**](#define-esp_ble_mesh_time_srv_define) (\_name, \_state\_data) <br>_Define a time server._ |
 | define  | [**ESP\_BLE\_MESH\_TIME\_STATE\_DEFINE**](#define-esp_ble_mesh_time_state_define) (\_name) <br>_Define a time state populated with default values._ |
 | define  | [**MAX\_TIME\_SERVER\_MSG\_SIZE**](#define-max_time_server_msg_size)  11<br>_Max message size for time server._ |
-| define  | [**MAX\_TIME\_SETUP\_SERVER\_MSG\_SIZE**](#define-max_time_setup_server_msg_size)  11<br>_Max message size for time setup server._ |
 | define  | [**TAI\_DELTA\_ZERO**](#define-tai_delta_zero)  0x00FF<br>_BLE Mesh Time state value for a TAI-UTC delta of 0. TAI-UTC delta values below this number are negative._ |
 | define  | [**TAI\_UTC\_EPOCH\_SECONDS**](#define-tai_utc_epoch_seconds)  946684768<br>_UTC time of the TAI epoch, in seconds._ |
 | define  | [**TAI\_UTC\_OFFSET\_AT\_EPOCH**](#define-tai_utc_offset_at_epoch)  32<br>_The value of TAI-UTC delta at the TAI epoch._ |
@@ -235,17 +234,6 @@ _Define a time state populated with default values._
 _Max message size for time server._
 ```c
 #define MAX_TIME_SERVER_MSG_SIZE 11
-```
-
-
-**Note:**
-
-Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1.
-### define `MAX_TIME_SETUP_SERVER_MSG_SIZE`
-
-_Max message size for time setup server._
-```c
-#define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 ```
 
 
