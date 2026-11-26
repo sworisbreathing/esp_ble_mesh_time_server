@@ -33,6 +33,18 @@
 #define TAI_DELTA_ZERO 0x00FF
 #define TIME_ZONE_OFFSET_ZERO 0x40
 
+typedef struct {
+  uint8_t  time_role;
+  uint8_t  uncertainty;
+  uint8_t  time_authority;
+  uint8_t  time_zone_offset_curr;
+  uint8_t  time_zone_offset_new;
+  uint8_t  tai_zone_change[5];
+  uint16_t tai_utc_delta_curr;
+  uint16_t tai_utc_delta_new;
+  uint8_t  tai_delta_change[5];
+} app_time_persist_state_t;
+
 static const char *TAG = "app/ble_mesh/time_scene_server.c";
 static const char *NVS_KEY = "ble_mesh_time";
 
@@ -550,7 +562,7 @@ esp_err_t ble_mesh_time_unprov() {
   esp_timer_stop_blocking(tz_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tz_update_timer);
 
-  esp_timer_stop_blocking(tai_utc_delta_update_timer);
+  esp_timer_stop_blocking(tai_utc_delta_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tai_utc_delta_update_timer);
 
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
