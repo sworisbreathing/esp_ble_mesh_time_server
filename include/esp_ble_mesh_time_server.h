@@ -17,11 +17,15 @@
 extern "C" {
 #endif
 
-/*
- * Max message sizes are calculated from message descriptions in section 5.2.1
+/**
+ * @brief Max message sizes are calculated from message descriptions in section 5.2.1
  * of the BLE Mesh spec, v1.1.1.
  */
 #define MAX_TIME_SERVER_MSG_SIZE 11
+
+/**
+ * @brief Max message size for time setup server
+ */
 #define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 
 #define TAI_UTC_EPOCH_SECONDS 946684768

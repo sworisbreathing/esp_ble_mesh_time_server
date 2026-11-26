@@ -1,0 +1,6 @@
+repos:
+- repo: https://github.com/espressif/doxybook
+  rev: v0.3.2
+  hooks:
+    - id: doxygen-api-md
+      args: ["-i", "docs/doxygen_output/xml", "-o", "docs/src/api.md"]

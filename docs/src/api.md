@@ -33,8 +33,8 @@
 | define  | [**ESP\_BLE\_MESH\_TIME\_SETUP\_SRV\_DEFINE**](#define-esp_ble_mesh_time_setup_srv_define) (\_name, \_state\_data) <br> |
 | define  | [**ESP\_BLE\_MESH\_TIME\_SRV\_DEFINE**](#define-esp_ble_mesh_time_srv_define) (\_name, \_state\_data) <br> |
 | define  | [**ESP\_BLE\_MESH\_TIME\_STATE\_DEFINE**](#define-esp_ble_mesh_time_state_define) (\_name) <br> |
-| define  | [**MAX\_TIME\_SERVER\_MSG\_SIZE**](#define-max_time_server_msg_size)  11<br> |
-| define  | [**MAX\_TIME\_SETUP\_SERVER\_MSG\_SIZE**](#define-max_time_setup_server_msg_size)  11<br> |
+| define  | [**MAX\_TIME\_SERVER\_MSG\_SIZE**](#define-max_time_server_msg_size)  11<br>_Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1._ |
+| define  | [**MAX\_TIME\_SETUP\_SERVER\_MSG\_SIZE**](#define-max_time_setup_server_msg_size)  11<br>_Max message size for time setup server._ |
 | define  | [**TAI\_DELTA\_ZERO**](#define-tai_delta_zero)  0x00FF<br> |
 | define  | [**TAI\_UTC\_EPOCH\_SECONDS**](#define-tai_utc_epoch_seconds)  946684768<br> |
 | define  | [**TAI\_UTC\_OFFSET\_AT\_EPOCH**](#define-tai_utc_offset_at_epoch)  32<br> |
@@ -198,12 +198,14 @@ void oob_time_updated (
 
 ### define `MAX_TIME_SERVER_MSG_SIZE`
 
+_Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1._
 ```c
 #define MAX_TIME_SERVER_MSG_SIZE 11
 ```
 
 ### define `MAX_TIME_SETUP_SERVER_MSG_SIZE`
 
+_Max message size for time setup server._
 ```c
 #define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 ```
@@ -231,3 +233,5 @@ void oob_time_updated (
 ```c
 #define TIME_ZONE_OFFSET_ZERO 0x40
 ```
+
+
