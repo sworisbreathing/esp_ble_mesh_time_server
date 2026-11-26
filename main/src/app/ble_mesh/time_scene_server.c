@@ -316,6 +316,7 @@ void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t eve
 void oob_time_updated(void) {
   ESP_LOGI(TAG, "time updated from oob source");
   time_state.time.uncertainty = 0; // we're certain
+  time_state.time.time_authority = 1;
   if (
     (time_state.time_role == ESP_BLE_MESH_TIME_RELAY || time_state.time_role == ESP_BLE_MESH_TIME_AUTHORITY) &&
     time_server.model->pub->publish_addr != ESP_BLE_MESH_ADDR_UNASSIGNED &&
