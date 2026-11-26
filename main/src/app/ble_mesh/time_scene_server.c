@@ -480,25 +480,25 @@ void oob_time_updated(uint8_t uncertainty) {
   }
 }
 
-esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_time_setup_srv_t *time_setup_srv, nvs_handle_t nvs_handle) {
-  if (time_srv == NULL || time_setup_srv == NULL) {
+esp_err_t ble_mesh_time_init(esp_ble_mesh_time_server_config_t config) {
+  if (config.time_server == NULL || config.time_setup_server == NULL) {
     ESP_LOGE(TAG, "time server and/or time setup server were NULL");
     return ESP_ERR_INVALID_ARG;
   }
-  if (time_srv->state == NULL || time_setup_srv->state == NULL) {
+  if (config.time_server->state == NULL || config.time_setup_server->state == NULL) {
     ESP_LOGE(TAG, "time server and/or time setup server have NULL state");
     return ESP_ERR_INVALID_ARG;
   }
-  if (time_srv->state != time_setup_srv->state) {
+  if (config.time_server->state != config.time_setup_server->state) {
     ESP_LOGE(TAG, "time server and time setup server must have the same state");
     return ESP_ERR_INVALID_ARG;
   }
 
 #if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
-  s_nvs_handle = nvs_handle;
+  s_nvs_handle = config.nvs_handle;
 #endif
 
-  time_server = time_srv;
+  time_server = config.time_server;
 
   esp_timer_create_args_t timer_opts = {
     .name = "esp_ble_mesh_tz_upd",

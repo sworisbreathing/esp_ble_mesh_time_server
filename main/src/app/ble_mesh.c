@@ -68,7 +68,12 @@ static esp_err_t ble_mesh_init(nvs_handle_t nvs_handle)
     }
 
     ESP_ERROR_CHECK_WITHOUT_ABORT(generic_server_init());
-    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init(&time_server, &time_setup_server, nvs_handle));
+    esp_ble_mesh_time_server_config_t ts_config = {
+      .time_server = &time_server,
+      .time_setup_server = &time_setup_server,
+      .nvs_handle = nvs_handle,
+    };
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init(ts_config));
 
 #ifdef CONFIG_IDF_TARGET
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_ble_mesh_set_unprovisioned_device_name(CONFIG_IDF_TARGET));

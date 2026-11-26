@@ -51,6 +51,40 @@ extern "C" {
         .state = _state_data, \
     }
 
+/**
+ * @brief BLE Mesh time server configuration
+ */
+typedef struct {
+  /**
+   * @brief Pointer to the BLE Mesh time server.
+   *
+   * @note  This pointer must remain valid during the lifetime
+   *        of the BLE Mesh device.
+   *        Shall not be set to NULL.
+   *        State property must not be NULL and must be shared
+   *        with time_setup_server.
+   */
+  esp_ble_mesh_time_srv_t *time_server;
+  /**
+   * @brief Pointer to the BLE Mesh time setup server.
+   *
+   * @note  This pointer must remain valid during the lifetime
+   *        of the BLE Mesh device.
+   *        Shall not be set to NULL.
+   *        State property must not be NULL and must be shared
+   *        with time_server.
+   */
+  esp_ble_mesh_time_setup_srv_t *time_setup_server;
+  /**
+   * @brief NVS Handle for settings persistence.
+   *
+   * @note  When time server persistence is enabled
+   *        via ESP_BLE_MESH_TIME_SETTINGS, this must be a properly initialized handle
+   *        which must remain valid during the lifetime of the BLE Mesh device.
+   */
+  nvs_handle_t nvs_handle;
+} esp_ble_mesh_time_server_config_t;
+
 void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t event,
                                                 esp_ble_mesh_time_scene_server_cb_param_t *param);
 
@@ -71,16 +105,9 @@ void oob_time_updated(uint8_t uncertainty);
  * @note The time server, time setup server, and state must be defined,
  *       and the state must be set on both the time server and time setup server.
  *
- * @param[in] time_server:       Pointer to the BLE Mesh time server. This pointer must
- *                               remain valid during the lifetime of the BLE Mesh device.
- *                               Shall not be set to NULL.
- *                               State property must not be NULL and must be shared
- *                               with time_setup_server.
- * @param[in] time_setup_server: Pointer to the BLE Mesh time setup server. This pointer must
- *                               remain valid during the lifetime of the BLE Mesh device.
- *                               Shall not be set to NULL.
- *                               State property must not be NULL and must be shared
- *                               with time_server.
+ * @param[in] config: The time server configuration. Its contents must remain valid for the
+ *                    life of the BLE Mesh device, however the configuration itself need only
+ *                    remain valid until this call completes.
  *
  * @return
  *    - ESP_OK: success
@@ -89,8 +116,7 @@ void oob_time_updated(uint8_t uncertainty);
  *    - error codes returned by \c nvs_get_blob
  *    - error codes returned by \c esp_timer_create
  */
-esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_server,
-                                          esp_ble_mesh_time_setup_srv_t *time_setup_server, nvs_handle_t nvs_handle);
+esp_err_t ble_mesh_time_init(esp_ble_mesh_time_server_config_t config);
 
 esp_err_t ble_mesh_time_deinit(void);
 
