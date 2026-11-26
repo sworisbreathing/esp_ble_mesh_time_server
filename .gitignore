@@ -87,3 +87,6 @@ dependencies.lock
 
 # doxygen outputs (because automation will update markdown sources in git instead)
 doxygen_output/
+
+# mdbook outputs
+book/

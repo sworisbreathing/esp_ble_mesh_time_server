@@ -47,15 +47,3 @@ in as simple a way as is practical.
 
 Long-term it is desirable to get fixes into ESP-BLE-MESH itself rather than
 having to rely on a third-party component, but for now, this will have to do.
-
----
-
-# Programming Guide
-
-- [Time Server](guide.md)
-
----
-
-# API Reference
-
-- [API Reference](api.md)
