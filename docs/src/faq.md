@@ -53,6 +53,20 @@ First, rule out the simple stuff:
 
     **Note:** at the time of this writing, none of these IDF versions have been released yet.
 
+If the node correctly handles Time Set / Time Get messages and the issue is limited to the handling of unsolicited Time Status messages (i.e. via `oob_time_updated()`), it's likely related to the node's time role:
+
+- `ESP_BLE_MESH_TIME_NONE` is the default. These nodes silently ignore unsolicited Time Status
+  messages entirely.
+- `ESP_BLE_MESH_TIME_AUTHORITY` nodes can send unsolicited Time Status messages (i.e. via `oob_time_updated()`) but silently ignore any messages received from other nodes
+- `ESP_BLE_MESH_TIME_RELAY` nodes process incoming unsolicited Time Status messages and propagate them through the network. They can also send their own unsolicited Time Status messages.
+- `ESP_BLE_MESH_TIME_CLIENT` nodes process incoming unsolicited Time Status messages but don't send/propagate them.
+
+If the time role isn't the issue, then the issue is likely related to publish/subscription settings or network topology:
+
+- Check the publish address of your Time Authority / Time Relay nodes
+- Check the subscription address of your Time Relay / Time Client nodes
+- Unsolicited Time Status messages are always sent with a TTL of 0. Nodes must be in direct communication with a Time Authority or Time Relay node in order to receive these messages.
+
 ### The nRF Mesh app isn't sending or receiving BLE Mesh time messages
 
 [See above](#my-devices-arent-sending-or-receiving-ble-mesh-time-messages)
