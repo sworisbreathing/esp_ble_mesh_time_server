@@ -1,4 +1,4 @@
-# ESP BLE Mesh Time Server Programming Guide
+# ESP BLE Mesh Time Server User Guide
 
 ## Define Servers and States
 
