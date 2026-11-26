@@ -69,7 +69,8 @@ If the time role isn't the issue, then the issue is likely related to publish/su
 
 ### The nRF Mesh app isn't sending or receiving BLE Mesh time messages
 
-[See above](#my-devices-arent-sending-or-receiving-ble-mesh-time-messages)
+[See above](#my-devices-arent-sending-or-receiving-ble-mesh-time-messages). The most common reason this
+can happen is the byte alignment issue affecting older IDF versions.
 
 ### The time displayed in the nRF Mesh app is slightly off from the time reported by my device
 
