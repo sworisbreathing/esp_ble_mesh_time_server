@@ -1,5 +1,5 @@
 ---
-version: "1.0.0-dev"
+version: "1.0.0-dev.1"
 description: Time Server for ESP-BLE-MESH
 url: https://github.com/sworisbreathing/esp_ble_mesh_time_server
 repository: https://github.com/sworisbreathing/esp_ble_mesh_time_server.git
