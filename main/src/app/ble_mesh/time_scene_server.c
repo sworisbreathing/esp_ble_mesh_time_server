@@ -67,7 +67,10 @@ static app_time_persist_state_t persist_state = {
 };
 
 static esp_timer_handle_t tz_update_timer;
+
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
 static esp_timer_handle_t tai_utc_delta_update_timer;
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
 extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
@@ -189,6 +192,7 @@ static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool 
   return result;
 }
 
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
 static void set_tai_utc_delta(uint16_t tai_utc_delta, const uint8_t *tai_delta_change, bool persist) {
   // cancel any previously scheduled delta update
   // error checking not required here.
@@ -233,6 +237,7 @@ static void set_tai_utc_delta(uint16_t tai_utc_delta, const uint8_t *tai_delta_c
     ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
   }
 }
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
 static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertainty, uint16_t time_authority, uint16_t tai_utc_delta_curr, uint8_t time_zone_offset_curr) {
   bool res = false;
@@ -244,7 +249,11 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     tai_seconds[4] == 0x00
   )) {
     bool has_pending_tz_update = esp_timer_is_active(tz_update_timer);
+
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
     bool has_pending_tai_delta_update = esp_timer_is_active(tai_utc_delta_update_timer);
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
+
     char err_str[6];
     struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
     if (settimeofday(&t, NULL) != 0) {
@@ -255,9 +264,12 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     if (has_pending_tz_update) {
       set_timezone(time_state.time.time_zone_offset_new, time_state.time.tai_zone_change, true);
     }
+
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
     if (has_pending_tai_delta_update) {
       set_tai_utc_delta(time_state.time.tai_utc_delta_new, time_state.time.tai_delta_change, true);
     }
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
     res = true;
     struct tm t1 = {0};
@@ -271,11 +283,14 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
   time_state.time.subsecond = subsecond;
   time_state.time.uncertainty = uncertainty;
   time_state.time.time_authority = time_authority;
-  time_state.time.tai_utc_delta_curr = tai_utc_delta_curr;
   time_state.time.time_zone_offset_curr = time_zone_offset_curr;
 
-  persist_state.time_zone_offset_curr = time_zone_offset_curr;
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
+  time_state.time.tai_utc_delta_curr = tai_utc_delta_curr;
   persist_state.tai_utc_delta_curr = tai_utc_delta_curr;
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
+
+  persist_state.time_zone_offset_curr = time_zone_offset_curr;
   persist_state.uncertainty = uncertainty;
   persist_state.time_authority = time_authority;
   ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
@@ -287,10 +302,12 @@ static void tz_update_timer_cb(void *args) {
   set_timezone(time_state.time.time_zone_offset_new, NULL, true);
 }
 
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
 static void tai_utc_delta_update_timer_cb(void *args) {
   ESP_LOGI(TAG, "updating tai-utc delta from timer schedule");
   set_tai_utc_delta(time_state.time.tai_utc_delta_new, NULL, true);
 }
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
 static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_status) {
   struct timeval tm = {0};
@@ -349,7 +366,9 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         );
         break;
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_SET:
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
         set_tai_utc_delta(value->set.tai_utc_delta.tai_utc_delta_new, value->set.tai_utc_delta.tai_delta_change, true);
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_GET:
         memcpy(tai_delta_status_msg.tai_delta_change, time_state.time.tai_zone_change, sizeof(tai_delta_status_msg.tai_delta_change));
@@ -502,19 +521,26 @@ esp_err_t ble_mesh_time_init(void) {
     .callback = tz_update_timer_cb,
   };
   ESP_RETURN_ON_ERROR(esp_timer_create(&timer_opts, &tz_update_timer), TAG, "failed to create tz update timer");
+
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
   timer_opts.name = "esp_ble_mesh_tai_utc_upd";
   timer_opts.callback = tai_utc_delta_update_timer_cb;
   ESP_RETURN_ON_ERROR(esp_timer_create(&timer_opts, &tai_utc_delta_update_timer), TAG, "failed to create tai-utc delta update timer");
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
+
   if (exist) {
     time_state.time_role = persist_state.time_role;
     time_state.time.time_authority = persist_state.time_authority;
     time_state.time.time_zone_offset_curr = persist_state.time_zone_offset_curr;
     time_state.time.time_zone_offset_new = persist_state.time_zone_offset_new;
+    time_state.time.uncertainty = persist_state.uncertainty;
+    memcpy(time_state.time.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
+
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
     time_state.time.tai_utc_delta_curr = persist_state.tai_utc_delta_curr;
     time_state.time.tai_utc_delta_new = persist_state.tai_utc_delta_new;
-    time_state.time.uncertainty = persist_state.uncertainty;
     memcpy(time_state.time.tai_delta_change, persist_state.tai_delta_change, sizeof(persist_state.tai_delta_change));
-    memcpy(time_state.time.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
     // update current timezone
     set_timezone(persist_state.time_zone_offset_curr, NULL, false);
@@ -533,6 +559,7 @@ esp_err_t ble_mesh_time_init(void) {
       memset(time_state.time.tai_zone_change, 0x00, sizeof(time_state.time.tai_zone_change));
     }
 
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
     // update tai-utc delta
     set_tai_utc_delta(persist_state.tai_utc_delta_curr, NULL, false);
 
@@ -549,6 +576,7 @@ esp_err_t ble_mesh_time_init(void) {
       time_state.time.tai_utc_delta_new = time_state.time.tai_utc_delta_curr;
       memset(time_state.time.tai_delta_change, 0x00, sizeof(time_state.time.tai_delta_change));
     }
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
   }
   return ESP_OK;
 
@@ -562,8 +590,10 @@ esp_err_t ble_mesh_time_unprov() {
   esp_timer_stop_blocking(tz_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tz_update_timer);
 
+#if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
   esp_timer_stop_blocking(tai_utc_delta_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tai_utc_delta_update_timer);
+#endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
   return ESP_OK;

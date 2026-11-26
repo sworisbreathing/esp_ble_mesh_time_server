@@ -169,4 +169,17 @@ menu "Example Configuration"
             GPIO number (IOxx) to blink on and off the LED.
             Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
 
+    menu "ESP BLE Mesh Time Server"
+
+        config ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
+            bool "Handle TAI-UTC Delta Set Messages"
+            default n
+            help
+                Enables handling of TAI UTC Delta Set messages.
+                When enabled, TAI-UTC offset will be updated in response to the corresponding SET message.
+                When disabled, TAI-UTC offset is fixed at 37 seconds.
+                Disabled by default, because leap seconds are no longer being added to UTC.
+
+    endmenu
+
 endmenu
