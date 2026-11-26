@@ -76,7 +76,7 @@ esp_ble_mesh_time_setup_srv_t time_setup_server = {
   .state = &time_state,
 };
 
-static inline struct timeval ble_mesh_time_to_timeval(const uint8_t *tai_seconds, const uint8_t subsecond, const uint8_t tai_utc_delta_curr) {
+static inline struct timeval ble_mesh_time_to_timeval(const uint8_t *tai_seconds, const uint8_t subsecond, const uint16_t tai_utc_delta_curr) {
   // convert ble mesh tai seconds to epoch seconds
   time_t epoch_seconds = (time_t)TAI_UTC_OFFSET_SECONDS;
   epoch_seconds += (time_t) tai_seconds[0]       |
@@ -85,7 +85,7 @@ static inline struct timeval ble_mesh_time_to_timeval(const uint8_t *tai_seconds
                    (time_t) tai_seconds[3] << 24 |
                    (time_t) tai_seconds[4] << 32;
   // apply tai delta
-  // epoch_seconds += (tai_utc_delta_curr - TAI_DELTA_ZERO);
+  epoch_seconds -= (tai_utc_delta_curr - TAI_DELTA_ZERO);
   struct timeval res = {
     .tv_sec = epoch_seconds,
     .tv_usec = (suseconds_t) subsecond << 8,
@@ -93,7 +93,7 @@ static inline struct timeval ble_mesh_time_to_timeval(const uint8_t *tai_seconds
   return res;
 }
 
-static inline struct tm ble_mesh_time_to_tm(const uint8_t *tai_seconds, const uint8_t subsecond, const uint8_t tai_utc_delta_curr, const uint8_t time_zone_offset_curr) {
+static inline struct tm ble_mesh_time_to_tm(const uint8_t *tai_seconds, const uint8_t subsecond, const uint16_t tai_utc_delta_curr, const uint8_t time_zone_offset_curr) {
   struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
   struct tm res = {0};
   gmtime_r(&t.tv_sec, &res);
@@ -233,6 +233,7 @@ static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_stat
   }
 
   tm.tv_sec -= TAI_UTC_OFFSET_SECONDS;
+  tm.tv_sec += (time_state.time.tai_utc_delta_curr - TAI_DELTA_ZERO);
   time_status->tai_seconds[0] = (uint8_t) tm.tv_sec;
   time_status->tai_seconds[1] = (uint8_t) (tm.tv_sec >> 8);
   time_status->tai_seconds[2] = (uint8_t) (tm.tv_sec >> 16);
