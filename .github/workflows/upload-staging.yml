@@ -1,0 +1,19 @@
+name: Upload to staging
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  validate_staging:
+    if: github.ref_type == 'branch' && github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: espressif/upload-components-ci-action@v2
+        with:
+          components: "esp_ble_mesh_time_server: ."
+          namespace: "sworisbreathing"
+          registry_url: https://components-staging.espressif.com/
+          dry_run: true
