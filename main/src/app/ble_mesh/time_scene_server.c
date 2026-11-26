@@ -226,7 +226,6 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         set_timezone(value->set.time_zone.time_zone_offset_new);
         time_state.time.time_zone_offset_curr = value->set.time_zone.time_zone_offset_new;
         memcpy(value->set.time_zone.tai_zone_change, time_state.time.tai_zone_change, sizeof(time_state.time.tai_zone_change));
-        memcpy(&time_state.time.tai_zone_change, tz_status_msg.tai_zone_change, sizeof(tz_status_msg.tai_zone_change));
 
         persist_state.time_zone_offset_curr = value->set.time_zone.time_zone_offset_new;
         memcpy(value->set.time_zone.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
@@ -235,6 +234,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_GET:
         tz_status_msg.time_zone_offset_curr = time_state.time.time_zone_offset_curr;
         tz_status_msg.time_zone_offset_new = time_state.time.time_zone_offset_new;
+        memcpy(&time_state.time.tai_zone_change, tz_status_msg.tai_zone_change, sizeof(tz_status_msg.tai_zone_change));
         COEX_BLE_TRAFFIC(
           esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ZONE_STATUS, sizeof(tz_status_msg), (uint8_t *) &tz_status_msg)
         );
