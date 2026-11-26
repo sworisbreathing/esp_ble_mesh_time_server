@@ -180,6 +180,18 @@ menu "Example Configuration"
                 When disabled, TAI-UTC offset is fixed at 37 seconds.
                 Disabled by default, because leap seconds are no longer being added to UTC.
 
+        config ESP_BLE_MESH_TIME_SETTINGS
+            bool "Persist time server settings"
+            default y
+            depends on BLE_MESH_SETTINGS
+            help
+                Enables persistence of BLE Mesh time server / time setup server configuration
+                in flash.
+                Persisted settings are: time role state, uncertainty, time authority state,
+                timezone offset state, and (if enabled) tai utc delta state.
+                Current TAI time is not persisted. This component relies on the RTC for
+                timekeeping.
+
     endmenu
 
 endmenu
