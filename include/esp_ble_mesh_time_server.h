@@ -1,4 +1,4 @@
-/* time_scene_server.h - BLE Mesh time scene server hooks */
+/* esp_ble_mesh_time_server.h - BLE Mesh time server hooks */
 
 /*
  * SPDX-FileCopyrightText: 2026 Steven Swor
