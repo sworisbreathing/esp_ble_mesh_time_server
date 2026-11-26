@@ -11,6 +11,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include "esp_err.h"
 #include "esp_log.h"
 
 #include "board.h"
@@ -21,21 +22,12 @@
 
 void app_main(void)
 {
-    esp_err_t err;
-
     ESP_LOGI(TAG, "Initializing...");
 
     board_init();
 
-    err = nvs_flash_init_or_erase();
-    if (err) {
-      ESP_LOGE(TAG, "nvs_flash_init_or_erase failed (err %d)", err);
-      return;
-    }
+    ESP_ERROR_CHECK(nvs_flash_init_or_erase());
 
     /* Initialize the Bluetooth Mesh Subsystem */
-    err = app_ble_mesh_init();
-    if (err) {
-        ESP_LOGE(TAG, "Bluetooth mesh init failed (err %d)", err);
-    }
+    ESP_ERROR_CHECK(app_ble_mesh_init());
 }
