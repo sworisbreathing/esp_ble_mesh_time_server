@@ -105,61 +105,6 @@ static inline int64_t time_since_last_publish() {
   return last_status_publish_ts == 0 ? INT64_MAX : esp_timer_get_time() - last_status_publish_ts;
 }
 
-static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertainty, uint16_t time_authority, uint16_t tai_utc_delta_curr, uint8_t time_zone_offset_curr) {
-  bool res = false;
-  if (!(
-    tai_seconds[0] == 0x00 &&
-    tai_seconds[1] == 0x00 &&
-    tai_seconds[2] == 0x00 &&
-    tai_seconds[3] == 0x00 &&
-    tai_seconds[4] == 0x00
-  )) {
-    char err_str[6];
-    struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
-  #if defined(CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM) || defined(CONFIG_SNTP_TIME_SYNC_METHOD_IMMED)
-    if (settimeofday(&t, NULL) != 0) {
-      strerror_r(errno, err_str, sizeof(err_str));
-      ESP_LOGE(TAG, "failed to set system time: %s", err_str);
-      return false;
-    }
-  #elif defined(CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH)
-    struct timeval t_now, t_delta;
-    if (gettimeofday(&t_now, NULL) != 0) {
-      strerror_r(errno, err_str, sizeof(err_str));
-      ESP_LOGE(TAG, "failed to get current system time for time adjustment: %s", err_str);
-      return false;
-    }
-    t_delta.tv_sec = (t.tv_sec - t_now.tv_sec);
-    t_delta.tv_usec = (t.tv_usec - t_now.tv_usec);
-    if (adjtime(&t_delta, NULL) != 0) {
-      strerror_r(errno, err_str, sizeof(err_str));
-      ESP_LOGE(TAG, "failed to adjust system time: %s", err_str);
-      return false;
-    }
-  #endif
-    res = true;
-    struct tm t1 = {0};
-    localtime_r(&t.tv_sec, &t1);
-    char time_str[64];
-    strftime(time_str, sizeof(time_str), "%F %T%z", &t1);
-    ESP_LOGI(TAG, "time set: %s", time_str);
-  }
-
-  memcpy(time_state.time.tai_seconds, tai_seconds, 5);
-  time_state.time.subsecond = subsecond;
-  time_state.time.uncertainty = uncertainty;
-  time_state.time.time_authority = time_authority;
-  time_state.time.tai_utc_delta_curr = tai_utc_delta_curr;
-  time_state.time.time_zone_offset_curr = time_zone_offset_curr;
-
-  persist_state.time_zone_offset_curr = time_zone_offset_curr;
-  persist_state.tai_utc_delta_curr = tai_utc_delta_curr;
-  persist_state.uncertainty = uncertainty;
-  persist_state.time_authority = time_authority;
-  ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
-  return res;
-}
-
 static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool persist) {
   // cancel any previously scheduled timezone update
   // error checking not required here.
@@ -227,6 +172,47 @@ static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool 
     }
   }
   return result;
+}
+
+static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertainty, uint16_t time_authority, uint16_t tai_utc_delta_curr, uint8_t time_zone_offset_curr) {
+  bool res = false;
+  if (!(
+    tai_seconds[0] == 0x00 &&
+    tai_seconds[1] == 0x00 &&
+    tai_seconds[2] == 0x00 &&
+    tai_seconds[3] == 0x00 &&
+    tai_seconds[4] == 0x00
+  )) {
+    char err_str[6];
+    struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
+    if (settimeofday(&t, NULL) != 0) {
+      strerror_r(errno, err_str, sizeof(err_str));
+      ESP_LOGE(TAG, "failed to set system time: %s", err_str);
+      return false;
+    }
+    set_timezone(time_state.time.time_zone_offset_new, time_state.time.tai_zone_change, true);
+
+    res = true;
+    struct tm t1 = {0};
+    localtime_r(&t.tv_sec, &t1);
+    char time_str[64];
+    strftime(time_str, sizeof(time_str), "%F %T%z", &t1);
+    ESP_LOGI(TAG, "time set: %s", time_str);
+  }
+
+  memcpy(time_state.time.tai_seconds, tai_seconds, 5);
+  time_state.time.subsecond = subsecond;
+  time_state.time.uncertainty = uncertainty;
+  time_state.time.time_authority = time_authority;
+  time_state.time.tai_utc_delta_curr = tai_utc_delta_curr;
+  time_state.time.time_zone_offset_curr = time_zone_offset_curr;
+
+  persist_state.time_zone_offset_curr = time_zone_offset_curr;
+  persist_state.tai_utc_delta_curr = tai_utc_delta_curr;
+  persist_state.uncertainty = uncertainty;
+  persist_state.time_authority = time_authority;
+  ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+  return res;
 }
 
 static void tz_update_timer_cb(void *args) {
