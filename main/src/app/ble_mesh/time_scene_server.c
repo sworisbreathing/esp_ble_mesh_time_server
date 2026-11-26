@@ -17,14 +17,6 @@
 #include "ble_mesh_example_nvs.h"
 
 #include "app/ble_mesh/time_scene_server.h"
-#include "app/ble_mesh/defs.h"
-
-/*
- * Max message sizes are calculated from message descriptions in section 5.2.1
- * of the BLE Mesh spec, v1.1.1.
- */
-#define MAX_TIME_SERVER_MSG_SIZE 11
-#define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 
 #define TAI_UTC_EPOCH_SECONDS 946684768
 #define TAI_UTC_OFFSET_AT_EPOCH 32
@@ -73,7 +65,6 @@ static esp_timer_handle_t tai_utc_delta_update_timer;
 
 extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
-APP_BLE_MESH_MODEL_PUB_DEFINE(time_server_pub, MAX_TIME_SERVER_MSG_SIZE, ROLE_NODE);
 esp_ble_mesh_time_srv_t time_server = {
   .rsp_ctrl = {
     .get_auto_rsp = ESP_BLE_MESH_SERVER_RSP_BY_APP,
@@ -83,7 +74,6 @@ esp_ble_mesh_time_srv_t time_server = {
   .state = &time_state,
 };
 
-APP_BLE_MESH_MODEL_PUB_DEFINE(time_setup_pub, MAX_TIME_SETUP_SERVER_MSG_SIZE, ROLE_NODE);
 esp_ble_mesh_time_setup_srv_t time_setup_server = {
   .rsp_ctrl = {
     .get_auto_rsp = ESP_BLE_MESH_SERVER_RSP_BY_APP,

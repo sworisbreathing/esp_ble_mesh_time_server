@@ -3,18 +3,10 @@
 #include "esp_check.h"
 #include "esp_log.h"
 
-#include "app/ble_mesh/defs.h"
 #include "app/ble_mesh/generic_server.h"
-
-/*
- * msg len is the maximum message size from the BT Mesh model spec (including opcode)
- * see BT Mesh model spec v1.1.1, section 3.2.1
- */
-#define MAX_ONOFF_MESSAGE_SIZE 6
 
 static const char *TAG = "app/ble_mesh/generic_server.c";
 
-APP_BLE_MESH_MODEL_PUB_DEFINE(onoff_pub_0, MAX_ONOFF_MESSAGE_SIZE, ROLE_NODE);
 esp_ble_mesh_gen_onoff_srv_t onoff_server_0 = {
     .rsp_ctrl = {
         .get_auto_rsp = ESP_BLE_MESH_SERVER_AUTO_RSP,

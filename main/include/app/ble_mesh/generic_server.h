@@ -15,7 +15,12 @@
 extern "C" {
 #endif
 
-extern esp_ble_mesh_model_pub_t onoff_pub_0;
+/*
+ * msg len is the maximum message size from the BT Mesh model spec (including opcode)
+ * see BT Mesh model spec v1.1.1, section 3.2.1
+ */
+#define MAX_ONOFF_MESSAGE_SIZE 6
+
 extern esp_ble_mesh_gen_onoff_srv_t onoff_server_0;
 
 void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
