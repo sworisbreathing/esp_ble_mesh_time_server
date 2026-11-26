@@ -85,7 +85,7 @@ void oob_time_updated(void);
 esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_server,
                                           esp_ble_mesh_time_setup_srv_t *time_setup_server);
 
-esp_err_t ble_mesh_time_unprov(void);
+esp_err_t ble_mesh_time_deinit(void);
 
 #ifdef __cplusplus
 }

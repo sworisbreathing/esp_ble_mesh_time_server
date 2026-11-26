@@ -552,7 +552,7 @@ esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_tim
 
 }
 
-esp_err_t ble_mesh_time_unprov() {
+esp_err_t ble_mesh_time_deinit() {
   /*
    * TODO decide how to propagate errors here.
    * we need to do all of the things here on a best effort basis
@@ -564,6 +564,8 @@ esp_err_t ble_mesh_time_unprov() {
   esp_timer_stop_blocking(tai_utc_delta_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tai_utc_delta_update_timer);
 #endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
+
+  time_server = NULL;
 
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
   return ESP_OK;

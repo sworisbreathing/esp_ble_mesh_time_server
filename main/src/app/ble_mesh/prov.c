@@ -51,7 +51,7 @@ void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
         break;
     case ESP_BLE_MESH_NODE_PROV_RESET_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_RESET_EVT");
-        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_unprov());
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_deinit());
         ESP_LOGW(TAG, "Restarting");
         esp_restart();
         break;
