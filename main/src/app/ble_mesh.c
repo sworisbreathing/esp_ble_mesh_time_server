@@ -40,11 +40,13 @@ static esp_err_t ble_mesh_init(void)
 {
     esp_err_t err = ESP_OK;
 
-    esp_ble_mesh_register_prov_callback(ble_mesh_provisioning_cb);
-    esp_ble_mesh_register_config_server_callback(ble_mesh_config_server_cb);
-    esp_ble_mesh_register_generic_server_callback(ble_mesh_generic_server_cb);
+    ESP_LOGI(TAG, "registering callbacks");
+    ESP_RETURN_ON_ERROR(esp_ble_mesh_register_prov_callback(ble_mesh_provisioning_cb), TAG, "failed to register provisioning callback");
+    ESP_RETURN_ON_ERROR(esp_ble_mesh_register_config_server_callback(ble_mesh_config_server_cb), TAG, "failed to register config server callback");
+    ESP_RETURN_ON_ERROR(esp_ble_mesh_register_generic_server_callback(ble_mesh_generic_server_cb), TAG, "failed to register generic server callback");
 
     provision.uuid = dev_uuid;
+    ESP_LOGI(TAG, "initialising ble mesh");
     err = esp_ble_mesh_init(&provision, &composition);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to initialize mesh stack (err %d)", err);
