@@ -7,6 +7,7 @@
 #include "esp_ble_mesh_provisioning_api.h"
 #include "esp_ble_mesh_config_model_api.h"
 #include "esp_ble_mesh_generic_model_api.h"
+#include "esp_ble_mesh_time_scene_model_api.h"
 
 #include "ble_mesh_example_init.h"
 
@@ -14,6 +15,7 @@
 #include "app/ble_mesh/config_server.h"
 #include "app/ble_mesh/generic_server.h"
 #include "app/ble_mesh/prov.h"
+#include "app/ble_mesh/time_scene_server.h"
 
 #define CID_ESP 0x02E5
 
@@ -23,6 +25,8 @@ static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
 static esp_ble_mesh_model_t root_models[] = {
     ESP_BLE_MESH_MODEL_CFG_SRV(&config_server),
+    ESP_BLE_MESH_MODEL_TIME_SRV(&time_server_pub, &time_server),
+    ESP_BLE_MESH_MODEL_TIME_SETUP_SRV(&time_setup_server),
     ESP_BLE_MESH_MODEL_GEN_ONOFF_SRV(&onoff_pub_0, &onoff_server_0),
 };
 
@@ -44,6 +48,7 @@ static esp_err_t ble_mesh_init(void)
     ESP_RETURN_ON_ERROR(esp_ble_mesh_register_prov_callback(ble_mesh_provisioning_cb), TAG, "failed to register provisioning callback");
     ESP_RETURN_ON_ERROR(esp_ble_mesh_register_config_server_callback(ble_mesh_config_server_cb), TAG, "failed to register config server callback");
     ESP_RETURN_ON_ERROR(esp_ble_mesh_register_generic_server_callback(ble_mesh_generic_server_cb), TAG, "failed to register generic server callback");
+    ESP_RETURN_ON_ERROR(esp_ble_mesh_register_time_scene_server_callback(ble_mesh_time_scene_server_cb), TAG, "failed to register time scene server callback");
 
     provision.uuid = dev_uuid;
     ESP_LOGI(TAG, "initialising ble mesh");

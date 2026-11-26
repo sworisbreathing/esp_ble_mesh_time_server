@@ -1,4 +1,5 @@
 #include <time.h>
+#include "app/ble_mesh/time_scene_server.h"
 #include "esp_check.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -26,6 +27,7 @@ static void sntp_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
         gmtime_r(&t, &tm_utc);
         strftime(ts, sizeof(ts), "%Y-%m-%d %H:%M:%S", &tm_utc);
         ESP_LOGI(TAG, "SNTP event: time synced (UTC): %s.%06ld", ts, (long)evt->tv.tv_usec);
+        oob_time_updated();
     } else {
         ESP_LOGI(TAG, "SNTP event: time synced (no timeval provided)");
     }
