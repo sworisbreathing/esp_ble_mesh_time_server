@@ -1,4 +1,7 @@
 #include "app/ble_mesh/coexist.h"
+#include "app/ble_mesh/time_scene_server.h"
+#include "esp_err.h"
+#include "esp_system.h"
 #include "app/ble_mesh/prov.h"
 
 static const char *TAG = "app/ble_mesh/prov.c";
@@ -49,6 +52,9 @@ void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
     case ESP_BLE_MESH_NODE_PROV_RESET_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_RESET_EVT");
         COEX_BLE_SET(ESP_COEX_BLE_ST_MESH_CONFIG);
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_unprov());
+        ESP_LOGW(TAG, "Restarting");
+        esp_restart();
         break;
     case ESP_BLE_MESH_NODE_SET_UNPROV_DEV_NAME_COMP_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_SET_UNPROV_DEV_NAME_COMP_EVT, err_code %d", param->node_set_unprov_dev_name_comp.err_code);

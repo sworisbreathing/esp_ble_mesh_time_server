@@ -32,6 +32,8 @@ void oob_time_updated(void);
 
 esp_err_t ble_mesh_time_init(void);
 
+esp_err_t ble_mesh_time_unprov(void);
+
 #ifdef __cplusplus
 }
 #endif

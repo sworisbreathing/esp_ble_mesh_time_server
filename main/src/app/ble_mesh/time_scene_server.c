@@ -394,3 +394,8 @@ esp_err_t ble_mesh_time_init(void) {
   return ESP_OK;
 
 }
+
+esp_err_t ble_mesh_time_unprov() {
+  ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
+  return ESP_OK;
+}
