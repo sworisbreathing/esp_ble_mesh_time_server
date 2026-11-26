@@ -35,7 +35,7 @@
 static const char *TAG = "app/ble_mesh/time_scene_server.c";
 static const char *NVS_KEY = "ble_mesh_time";
 
-static RTC_DATA_ATTR int64_t last_status_publish_ts = 0;
+static int64_t last_status_publish_ts = 0;
 
 static esp_ble_mesh_time_state_t time_state = {
   .time.tai_utc_delta_curr = TAI_DELTA_ZERO + 37,
@@ -101,7 +101,7 @@ static inline struct tm ble_mesh_time_to_tm(const uint8_t *tai_seconds, const ui
 
 static inline int64_t time_since_last_publish() {
   // TODO handle timer reset due to deep sleep
-  return esp_timer_get_time() - last_status_publish_ts;
+  return last_status_publish_ts == 0 ? INT64_MAX : esp_timer_get_time() - last_status_publish_ts;
 }
 
 static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertainty, uint16_t time_authority, uint16_t tai_utc_delta_curr, uint8_t time_zone_offset_curr) {
