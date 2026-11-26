@@ -1,3 +1,4 @@
+#include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/prov.h"
 
 static const char *TAG = "app/ble_mesh/prov.c";
@@ -41,11 +42,13 @@ void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
         break;
     case ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT");
+        COEX_BLE_CLEAR(ESP_COEX_BLE_ST_MESH_CONFIG);
         prov_complete(param->node_prov_complete.net_idx, param->node_prov_complete.addr,
             param->node_prov_complete.flags, param->node_prov_complete.iv_index);
         break;
     case ESP_BLE_MESH_NODE_PROV_RESET_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_RESET_EVT");
+        COEX_BLE_SET(ESP_COEX_BLE_ST_MESH_CONFIG);
         break;
     case ESP_BLE_MESH_NODE_SET_UNPROV_DEV_NAME_COMP_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_SET_UNPROV_DEV_NAME_COMP_EVT, err_code %d", param->node_set_unprov_dev_name_comp.err_code);
