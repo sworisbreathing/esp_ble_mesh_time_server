@@ -8,6 +8,15 @@ maintainers:
   - Steven Swor  <1486524+sworisbreathing@users.noreply.github.com>
 examples:
   - path: examples/esp_ble_mesh_time_server_sntp
+files:
+  exclude:
+    - "**/book/**/*"
+    - "**/book.toml"
+    - "**/Doxyfile"
+    - "**/doxygen_output/**/*"
+    - "**/.cache/**/*"
+    - "**/.zed/**/*"
+    - "**/.pre-commit-config.yaml"
 
 dependencies:
   idf:
