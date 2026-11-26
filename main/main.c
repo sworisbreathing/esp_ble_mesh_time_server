@@ -12,7 +12,6 @@
 #include <inttypes.h>
 
 #include "esp_log.h"
-#include "nvs_flash.h"
 
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_common_api.h"
@@ -24,6 +23,7 @@
 
 #include "board.h"
 #include "ble_mesh_example_init.h"
+#include "app/nvs_flash.h"
 
 #define TAG "main.c"
 
@@ -293,12 +293,11 @@ void app_main(void)
 
     board_init();
 
-    err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
+    err = nvs_flash_init_or_erase();
+    if (err) {
+      ESP_LOGE(TAG, "nvs_flash_init_or_erase failed (err %d)", err);
+      return;
     }
-    ESP_ERROR_CHECK(err);
 
     err = bluetooth_init();
     if (err) {

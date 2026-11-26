@@ -1,5 +1,5 @@
-set(srcs "main.c"
-    "board.c")
+file(GLOB_RECURSE srcs
+                    "main.c" "board.c" "src/*.c")
 
 idf_component_register(SRCS "${srcs}"
-                    INCLUDE_DIRS  ".")
+                    INCLUDE_DIRS "." "./include")
