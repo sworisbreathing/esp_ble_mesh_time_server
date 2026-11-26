@@ -3,7 +3,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "esp_attr.h"
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_networking_api.h"
 #include "esp_ble_mesh_time_scene_model_api.h"
@@ -394,17 +393,19 @@ void oob_time_updated(void) {
 esp_err_t ble_mesh_time_init(void) {
   bool exist;
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_restore(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state), &exist), TAG, "failed to restore time server state from nvs flash");
-  time_state.time_role = persist_state.time_role;
-  time_state.time.time_authority = persist_state.time_authority;
-  time_state.time.time_zone_offset_curr = persist_state.time_zone_offset_curr;
-  time_state.time.time_zone_offset_new = persist_state.time_zone_offset_new;
-  time_state.time.tai_utc_delta_curr = persist_state.tai_utc_delta_curr;
-  time_state.time.tai_utc_delta_new = persist_state.tai_utc_delta_new;
-  time_state.time.uncertainty = persist_state.uncertainty;
-  memcpy(persist_state.tai_delta_change, time_state.time.tai_delta_change, sizeof(persist_state.tai_delta_change));
-  memcpy(persist_state.tai_zone_change, time_state.time.tai_zone_change, sizeof(persist_state.tai_zone_change));
+  if (exist) {
+    time_state.time_role = persist_state.time_role;
+    time_state.time.time_authority = persist_state.time_authority;
+    time_state.time.time_zone_offset_curr = persist_state.time_zone_offset_curr;
+    time_state.time.time_zone_offset_new = persist_state.time_zone_offset_new;
+    time_state.time.tai_utc_delta_curr = persist_state.tai_utc_delta_curr;
+    time_state.time.tai_utc_delta_new = persist_state.tai_utc_delta_new;
+    time_state.time.uncertainty = persist_state.uncertainty;
+    memcpy(persist_state.tai_delta_change, time_state.time.tai_delta_change, sizeof(persist_state.tai_delta_change));
+    memcpy(persist_state.tai_zone_change, time_state.time.tai_zone_change, sizeof(persist_state.tai_zone_change));
 
-  set_timezone(persist_state.time_zone_offset_curr);
+    set_timezone(persist_state.time_zone_offset_curr);
+  }
   return ESP_OK;
 
 }
