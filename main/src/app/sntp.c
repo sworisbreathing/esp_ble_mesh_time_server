@@ -1,11 +1,11 @@
 #include <time.h>
-#include "app/ble_mesh/time_scene_server.h"
 #include "esp_check.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif_sntp.h"
 #include "esp_sntp.h"
 
+#include "app/ble_mesh/time_scene_server.h"
 #include "app/event_loop.h"
 #include "app/sntp.h"
 
@@ -49,17 +49,17 @@ void time_sync_notification_cb(struct timeval *tv)
 
 static void print_servers(void)
 {
-    ESP_LOGI(TAG, "List of configured NTP servers:");
+    ESP_LOGD(TAG, "List of configured NTP servers:");
 
     for (uint8_t i = 0; i < SNTP_MAX_SERVERS; ++i){
         if (esp_sntp_getservername(i)){
-            ESP_LOGI(TAG, "server %d: %s", i, esp_sntp_getservername(i));
+            ESP_LOGD(TAG, "server %d: %s", i, esp_sntp_getservername(i));
         } else {
             // we have either IPv4 or IPv6 address, let's print it
             char buff[INET6_ADDRSTRLEN];
             ip_addr_t const *ip = esp_sntp_getserver(i);
             if (ipaddr_ntoa_r(ip, buff, INET6_ADDRSTRLEN) != NULL)
-                ESP_LOGI(TAG, "server %d: %s", i, buff);
+                ESP_LOGD(TAG, "server %d: %s", i, buff);
         }
     }
 }

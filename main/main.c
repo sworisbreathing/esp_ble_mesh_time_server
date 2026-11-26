@@ -24,6 +24,16 @@
 
 void app_main(void)
 {
+    esp_log_level_set("EXAMPLE_NVS", ESP_LOG_WARN);
+    esp_log_level_set("EXAMPLE_NVS: Store, data", ESP_LOG_WARN);
+    esp_log_level_set("EXAMPLE_NVS: Restore, data", ESP_LOG_WARN);
+
+    esp_log_level_set("wifi", ESP_LOG_WARN);
+    esp_log_level_set("wifi_init", ESP_LOG_WARN);
+    esp_log_level_set("esp_netif_handlers", ESP_LOG_WARN);
+
+    esp_log_level_set("BLE_MESH", ESP_LOG_WARN);
+
     ESP_LOGI(TAG, "Initializing...");
 
     board_init();

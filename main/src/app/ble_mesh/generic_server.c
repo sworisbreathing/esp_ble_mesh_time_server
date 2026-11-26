@@ -1,5 +1,6 @@
 #include "esp_ble_mesh_local_data_operation_api.h"
 #include "esp_ble_mesh_networking_api.h"
+#include "esp_log.h"
 
 #include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/defs.h"
@@ -88,7 +89,7 @@ void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
                                                esp_ble_mesh_generic_server_cb_param_t *param)
 {
     esp_ble_mesh_gen_onoff_srv_t *srv;
-    ESP_LOGI(TAG, "event 0x%02x, opcode 0x%04" PRIx32 ", src 0x%04x, dst 0x%04x",
+    ESP_LOGD(TAG, "event 0x%02x, opcode 0x%04" PRIx32 ", src 0x%04x, dst 0x%04x",
         event, param->ctx.recv_op, param->ctx.addr, param->ctx.recv_dst);
 
     switch (event) {
@@ -96,7 +97,7 @@ void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
         ESP_LOGI(TAG, "ESP_BLE_MESH_GENERIC_SERVER_STATE_CHANGE_EVT");
         if (param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET ||
             param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK) {
-            ESP_LOGI(TAG, "onoff 0x%02x", param->value.state_change.onoff_set.onoff);
+            ESP_LOGD(TAG, "onoff 0x%02x", param->value.state_change.onoff_set.onoff);
             change_led_state(param->model, &param->ctx, param->value.state_change.onoff_set.onoff);
         }
         break;
@@ -104,7 +105,7 @@ void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
         ESP_LOGI(TAG, "ESP_BLE_MESH_GENERIC_SERVER_RECV_GET_MSG_EVT");
         if (param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_GET) {
             srv = (esp_ble_mesh_gen_onoff_srv_t *)param->model->user_data;
-            ESP_LOGI(TAG, "onoff 0x%02x", srv->state.onoff);
+            ESP_LOGD(TAG, "onoff 0x%02x", srv->state.onoff);
             handle_gen_onoff_msg(param->model, &param->ctx, NULL);
         }
         break;
@@ -112,9 +113,9 @@ void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
         ESP_LOGI(TAG, "ESP_BLE_MESH_GENERIC_SERVER_RECV_SET_MSG_EVT");
         if (param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET ||
             param->ctx.recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK) {
-            ESP_LOGI(TAG, "onoff 0x%02x, tid 0x%02x", param->value.set.onoff.onoff, param->value.set.onoff.tid);
+            ESP_LOGD(TAG, "onoff 0x%02x, tid 0x%02x", param->value.set.onoff.onoff, param->value.set.onoff.tid);
             if (param->value.set.onoff.op_en) {
-                ESP_LOGI(TAG, "trans_time 0x%02x, delay 0x%02x",
+                ESP_LOGD(TAG, "trans_time 0x%02x, delay 0x%02x",
                     param->value.set.onoff.trans_time, param->value.set.onoff.delay);
             }
             handle_gen_onoff_msg(param->model, &param->ctx, &param->value.set.onoff);

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
-#include "app/ble_mesh/coexist.h"
+
 #include "esp_attr.h"
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_networking_api.h"
@@ -12,14 +12,14 @@
 #include "esp_log.h"
 #include "esp_random.h"
 #include "esp_timer.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 
 #include "ble_mesh_example_nvs.h"
 
+#include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/time_scene_server.h"
 #include "app/ble_mesh/defs.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "mesh/timer.h"
 
 /*
  * Max message sizes are calculated from message descriptions in section 5.2.1
@@ -308,7 +308,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
   }
 
 void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t event, esp_ble_mesh_time_scene_server_cb_param_t *param) {
-  ESP_LOGI(TAG, "event 0x%02x, opcode 0x%04" PRIx32 ", src 0x%04x, dst 0x%04x",
+  ESP_LOGD(TAG, "event 0x%02x, opcode 0x%04" PRIx32 ", src 0x%04x, dst 0x%04x",
       event, param->ctx.recv_op, param->ctx.addr, param->ctx.recv_dst);
   switch(event) {
     case ESP_BLE_MESH_TIME_SCENE_SERVER_STATE_CHANGE_EVT:

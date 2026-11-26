@@ -1,6 +1,7 @@
 #include "esp_check.h"
 #include "esp_err.h"
 #include "esp_event.h"
+#include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_netif_types.h"
 #include "esp_wifi.h"
@@ -69,11 +70,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            ESP_LOGD(TAG, "retry to connect to the AP");
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
-        ESP_LOGI(TAG,"connect to the AP fail");
+        ESP_LOGE(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
@@ -143,7 +144,7 @@ esp_err_t initialise_wifi(void) {
       ESP_LOGI(TAG, "connected to ap SSID:%s",
                EXAMPLE_ESP_WIFI_SSID);
   } else if (bits & WIFI_FAIL_BIT) {
-      ESP_LOGI(TAG, "Failed to connect to SSID:%s",
+      ESP_LOGE(TAG, "Failed to connect to SSID:%s",
                EXAMPLE_ESP_WIFI_SSID);
   } else {
       ESP_LOGE(TAG, "UNEXPECTED EVENT");
