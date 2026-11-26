@@ -457,9 +457,9 @@ void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t eve
   }
 }
 
-void oob_time_updated(void) {
-  ESP_LOGI(TAG, "time updated from oob source");
-  time_server->state->time.uncertainty = 0; // we're certain
+void oob_time_updated(uint8_t uncertainty) {
+  ESP_LOGI(TAG, "time updated from oob source with uncertainty %u", uncertainty);
+  time_server->state->time.uncertainty = uncertainty;
   time_server->state->time.time_authority = 1;
   if (
     (time_server->state->time_role == ESP_BLE_MESH_TIME_RELAY || time_server->state->time_role == ESP_BLE_MESH_TIME_AUTHORITY) &&

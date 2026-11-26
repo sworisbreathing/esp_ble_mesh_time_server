@@ -54,7 +54,13 @@ extern "C" {
 void ble_mesh_time_scene_server_cb(esp_ble_mesh_time_scene_server_cb_event_t event,
                                                 esp_ble_mesh_time_scene_server_cb_param_t *param);
 
-void oob_time_updated(void);
+/**
+ * @brief Hook to update BLE Mesh Time state from an out-of-band time source
+ * (GPS, SNTP, etc)
+ *
+ * @param[in] uncertainty - the time source uncertainty in 10ms steps
+ */
+void oob_time_updated(uint8_t uncertainty);
 
 /**
  * @brief Initialises BLE Mesh Time functionality.
