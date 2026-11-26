@@ -11,7 +11,7 @@
 #include "esp_log.h"
 #include "board.h"
 
-#define TAG "BOARD"
+#define TAG "board.c"
 
 void board_init(void)
 {

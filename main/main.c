@@ -25,7 +25,7 @@
 #include "board.h"
 #include "ble_mesh_example_init.h"
 
-#define TAG "EXAMPLE"
+#define TAG "main.c"
 
 #define CID_ESP 0x02E5
 
