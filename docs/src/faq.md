@@ -1,5 +1,12 @@
 # FAQs
 
+## Time Zone
+
+### My code already manages the system timezone
+
+The current implementation expects timezone to be managed through BLE Mesh.
+Hopefully this will be addressed soon.
+
 ## Time Uncertainty
 
 ### How should OOB time sources calculate uncertainty?
@@ -59,3 +66,27 @@ There are two bugs in nRF Mesh which could be affecting you.
    Updating nRF Mesh to the latest version should fix this issue.
 2. nRF Mesh doesn't adjust for TAI-UTC delta when rendering human-readable time. I'm hoping to
    raise this soon, along with a PR to fix it.
+
+### My device's time zone isn't updating
+
+If none of the [above troubleshooting steps](#my-devices-arent-sending-or-receiving-ble-mesh-time-messages)
+helps, it's possible you're hitting one of the following issues:
+
+1. Insufficient memory to set the `TZ` environment variable. Check the logs for an error message saying
+   `failed to set TZ`.
+2. You've encountered a [race condition](guide.md#thread-safety)
+2. On Linux targets, `CAP_SYS_TIME` is required. Unfortunately, `tzset()` doesn't report errors. Check the
+   logs for an info message saying `time zone updated` and note the values reported. If the numeric portions
+   don't match (ignoring `+`, `-`, `<`, `>`, and `:`), then this is likely to be the culprit.
+
+    Successful `tzset()`:
+
+    ```text
+    I (1234) ble_mesh_time: time zone updated to <+1100>-11:00 (+1100)
+    ```
+
+    `tzset()` failure:
+
+    ```text
+    I (1234) ble_mesh_time: time zone updated to <+1100>-11:00 (-0600)
+    ```
