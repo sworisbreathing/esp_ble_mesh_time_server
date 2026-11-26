@@ -17,6 +17,7 @@ files:
     - "**/.cache/**/*"
     - "**/.zed/**/*"
     - "**/.pre-commit-config.yaml"
+    - "**/.clangd"
 
 dependencies:
   idf:
