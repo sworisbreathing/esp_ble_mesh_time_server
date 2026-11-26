@@ -143,7 +143,7 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     ESP_LOGI(TAG, "time set: %s", time_str);
   }
 
-  memcpy(tai_seconds, time_state.time.tai_seconds, 5);
+  memcpy(time_state.time.tai_seconds, tai_seconds, 5);
   time_state.time.subsecond = subsecond;
   time_state.time.uncertainty = uncertainty;
   time_state.time.time_authority = time_authority;
@@ -178,12 +178,12 @@ static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool 
 
   time_state.time.time_zone_offset_curr = timezone;
   time_state.time.time_zone_offset_new = timezone;
-  memcpy((void *)tai_zone_change, time_state.time.tai_zone_change, sizeof(time_state.time.tai_zone_change));
+  memcpy(time_state.time.tai_zone_change, tai_zone_change, sizeof(time_state.time.tai_zone_change));
 
   if (persist) {
     persist_state.time_zone_offset_curr = timezone;
     persist_state.time_zone_offset_new = timezone;
-    memcpy((void *)tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
+    memcpy(persist_state.tai_zone_change, tai_zone_change,  sizeof(persist_state.tai_zone_change));
     ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
   }
 
@@ -241,7 +241,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_GET:
         tz_status_msg.time_zone_offset_curr = time_state.time.time_zone_offset_curr;
         tz_status_msg.time_zone_offset_new = time_state.time.time_zone_offset_new;
-        memcpy(&time_state.time.tai_zone_change, tz_status_msg.tai_zone_change, sizeof(tz_status_msg.tai_zone_change));
+        memcpy(tz_status_msg.tai_zone_change, &time_state.time.tai_zone_change,  sizeof(tz_status_msg.tai_zone_change));
         COEX_BLE_TRAFFIC(
           esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ZONE_STATUS, sizeof(tz_status_msg), (uint8_t *) &tz_status_msg)
         );
@@ -250,15 +250,15 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         time_state.time.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
         // TODO handle scheduled tai change
         time_state.time.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
-        memcpy(value->set.tai_utc_delta.tai_delta_change, time_state.time.tai_delta_change, sizeof(time_state.time.tai_delta_change));
+        memcpy(time_state.time.tai_delta_change, value->set.tai_utc_delta.tai_delta_change, sizeof(time_state.time.tai_delta_change));
 
         persist_state.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
         persist_state.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
-        memcpy(value->set.tai_utc_delta.tai_delta_change, persist_state.tai_delta_change, sizeof(persist_state.tai_delta_change));
+        memcpy(persist_state.tai_delta_change, value->set.tai_utc_delta.tai_delta_change, sizeof(persist_state.tai_delta_change));
         ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_GET:
-        memcpy(time_state.time.tai_zone_change, tai_delta_status_msg.tai_delta_change, sizeof(tai_delta_status_msg.tai_delta_change));
+        memcpy(tai_delta_status_msg.tai_delta_change, time_state.time.tai_zone_change, sizeof(tai_delta_status_msg.tai_delta_change));
         tai_delta_status_msg.tai_utc_delta_curr = time_state.time.tai_utc_delta_curr;
         tai_delta_status_msg.tai_utc_delta_new = time_state.time.tai_utc_delta_new;
         tai_delta_status_msg.padding_1 = 0b0;
@@ -408,8 +408,8 @@ esp_err_t ble_mesh_time_init(void) {
     time_state.time.tai_utc_delta_curr = persist_state.tai_utc_delta_curr;
     time_state.time.tai_utc_delta_new = persist_state.tai_utc_delta_new;
     time_state.time.uncertainty = persist_state.uncertainty;
-    memcpy(persist_state.tai_delta_change, time_state.time.tai_delta_change, sizeof(persist_state.tai_delta_change));
-    memcpy(persist_state.tai_zone_change, time_state.time.tai_zone_change, sizeof(persist_state.tai_zone_change));
+    memcpy(time_state.time.tai_delta_change, persist_state.tai_delta_change, sizeof(persist_state.tai_delta_change));
+    memcpy(time_state.time.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
 
     set_timezone(persist_state.time_zone_offset_curr, persist_state.tai_zone_change, false);
   }
