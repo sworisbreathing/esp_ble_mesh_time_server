@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "esp_log.h"
 
 #include "app/ble_mesh/config_server.h"

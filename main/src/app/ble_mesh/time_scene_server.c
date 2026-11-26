@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <stdint.h>
 #include <string.h>
 #include <sys/time.h>

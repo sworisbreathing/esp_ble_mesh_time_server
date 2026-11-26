@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "esp_ble_mesh_local_data_operation_api.h"
 #include "esp_ble_mesh_networking_api.h"
 #include "esp_check.h"

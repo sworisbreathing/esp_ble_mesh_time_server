@@ -1,3 +1,11 @@
+/* event_loop.h - Event Loop hooks */
+
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef APP_EVENT_LOOP_H_
 #define APP_EVENT_LOOP_H_
 

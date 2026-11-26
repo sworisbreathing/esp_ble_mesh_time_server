@@ -1,3 +1,10 @@
+/* sntp.h - SNTP hooks */
+
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef APP_SNTP_H_
 #define APP_SNTP_H_
 

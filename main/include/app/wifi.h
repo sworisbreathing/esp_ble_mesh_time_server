@@ -1,3 +1,10 @@
+/* wifi.h - wifi hooks */
+
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef APP_WIFI_H_
 #define APP_WIFI_H_
 

@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <time.h>
 #include "esp_check.h"
 #include "esp_event.h"

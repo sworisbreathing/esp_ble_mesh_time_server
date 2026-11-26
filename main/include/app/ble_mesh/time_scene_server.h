@@ -1,3 +1,11 @@
+/* time_scene_server.h - BLE Mesh time scene server hooks */
+
+/*
+ * SPDX-FileCopyrightText: 2026 Steven Swor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef APP_TIME_SCENE_SERVER_H_
 #define APP_TIME_SCENE_SERVER_H_
 

@@ -3,6 +3,7 @@
 /*
  * SPDX-FileCopyrightText: 2017 Intel Corporation
  * SPDX-FileContributor: 2018-2026 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileContributor: 2026 Steven Swor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
