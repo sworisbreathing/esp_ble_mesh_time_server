@@ -29,16 +29,16 @@
 
 | Type | Name |
 | ---: | :--- |
-| define  | [**DEFAULT\_TAI\_UTC\_OFFSET**](#define-default_tai_utc_offset)  37<br> |
-| define  | [**ESP\_BLE\_MESH\_TIME\_SETUP\_SRV\_DEFINE**](#define-esp_ble_mesh_time_setup_srv_define) (\_name, \_state\_data) <br> |
-| define  | [**ESP\_BLE\_MESH\_TIME\_SRV\_DEFINE**](#define-esp_ble_mesh_time_srv_define) (\_name, \_state\_data) <br> |
-| define  | [**ESP\_BLE\_MESH\_TIME\_STATE\_DEFINE**](#define-esp_ble_mesh_time_state_define) (\_name) <br> |
-| define  | [**MAX\_TIME\_SERVER\_MSG\_SIZE**](#define-max_time_server_msg_size)  11<br>_Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1._ |
+| define  | [**DEFAULT\_TAI\_UTC\_OFFSET**](#define-default_tai_utc_offset)  37<br>_The TAI-UTC delta as of 31 December, 2016._ |
+| define  | [**ESP\_BLE\_MESH\_TIME\_SETUP\_SRV\_DEFINE**](#define-esp_ble_mesh_time_setup_srv_define) (\_name, \_state\_data) <br>_Define a time setup server._ |
+| define  | [**ESP\_BLE\_MESH\_TIME\_SRV\_DEFINE**](#define-esp_ble_mesh_time_srv_define) (\_name, \_state\_data) <br>_Define a time server._ |
+| define  | [**ESP\_BLE\_MESH\_TIME\_STATE\_DEFINE**](#define-esp_ble_mesh_time_state_define) (\_name) <br>_Define a time state populated with default values._ |
+| define  | [**MAX\_TIME\_SERVER\_MSG\_SIZE**](#define-max_time_server_msg_size)  11<br>_Max message size for time server._ |
 | define  | [**MAX\_TIME\_SETUP\_SERVER\_MSG\_SIZE**](#define-max_time_setup_server_msg_size)  11<br>_Max message size for time setup server._ |
-| define  | [**TAI\_DELTA\_ZERO**](#define-tai_delta_zero)  0x00FF<br> |
-| define  | [**TAI\_UTC\_EPOCH\_SECONDS**](#define-tai_utc_epoch_seconds)  946684768<br> |
-| define  | [**TAI\_UTC\_OFFSET\_AT\_EPOCH**](#define-tai_utc_offset_at_epoch)  32<br> |
-| define  | [**TIME\_ZONE\_OFFSET\_ZERO**](#define-time_zone_offset_zero)  0x40<br> |
+| define  | [**TAI\_DELTA\_ZERO**](#define-tai_delta_zero)  0x00FF<br>_BLE Mesh Time state value for a TAI-UTC delta of 0. TAI-UTC delta values below this number are negative._ |
+| define  | [**TAI\_UTC\_EPOCH\_SECONDS**](#define-tai_utc_epoch_seconds)  946684768<br>_UTC time of the TAI epoch, in seconds._ |
+| define  | [**TAI\_UTC\_OFFSET\_AT\_EPOCH**](#define-tai_utc_offset_at_epoch)  32<br>_The value of TAI-UTC delta at the TAI epoch._ |
+| define  | [**TIME\_ZONE\_OFFSET\_ZERO**](#define-time_zone_offset_zero)  0x40<br>_BLE Mesh Time state value for a Time Zone offset of 0. Time Zone offset values below this number are negative._ |
 
 ## Structures and Types Documentation
 
@@ -48,17 +48,11 @@ _BLE Mesh time server configuration._
 
 Variables:
 
--  nvs\_handle\_t nvs_handle  <br>_NVS Handle for settings persistence._<br>**Note:**
+-  nvs\_handle\_t nvs_handle  <br>_NVS Handle for settings persistence._<br>When time server persistence is enabled via `CONFIG_ESP_BLE_MESH_TIME_SETTINGS`, this must be a properly initialized handle which must remain valid during the lifetime of the BLE Mesh device.
 
-When time server persistence is enabled via ESP\_BLE\_MESH\_TIME\_SETTINGS, this must be a properly initialized handle which must remain valid during the lifetime of the BLE Mesh device.
+-  esp\_ble\_mesh\_time\_srv\_t \* time_server  <br>_Pointer to the BLE Mesh time server._<br>This pointer must remain valid during the lifetime of the BLE Mesh device. Shall not be set to NULL. State property must not be NULL and must be shared with time\_setup\_server.
 
--  esp\_ble\_mesh\_time\_srv\_t \* time_server  <br>_Pointer to the BLE Mesh time server._<br>**Note:**
-
-This pointer must remain valid during the lifetime of the BLE Mesh device. Shall not be set to NULL. State property must not be NULL and must be shared with time\_setup\_server.
-
--  esp\_ble\_mesh\_time\_setup\_srv\_t \* time_setup_server  <br>_Pointer to the BLE Mesh time setup server._<br>**Note:**
-
-This pointer must remain valid during the lifetime of the BLE Mesh device. Shall not be set to NULL. State property must not be NULL and must be shared with time\_server.
+-  esp\_ble\_mesh\_time\_setup\_srv\_t \* time_setup_server  <br>_Pointer to the BLE Mesh time setup server._<br>This pointer must remain valid during the lifetime of the BLE Mesh device. Shall not be set to NULL. State property must not be NULL and must be shared with time\_server.
 
 
 ## Functions Documentation
@@ -96,9 +90,6 @@ esp_err_t ble_mesh_time_init (
 
 This API needs to be called after BLE Mesh Time callbacks are registered and BLE Mesh is initialized.
 
-
-
-**Note:**
 
 The time server, time setup server, and state must be defined, and the state must be set on both the time server and time setup server.
 
@@ -146,12 +137,18 @@ void oob_time_updated (
 
 ### define `DEFAULT_TAI_UTC_OFFSET`
 
+_The TAI-UTC delta as of 31 December, 2016._
 ```c
 #define DEFAULT_TAI_UTC_OFFSET 37
 ```
 
+
+**Note:**
+
+The BIPM voted in 2026 to replace leap seconds with leap hours. Leap hours are not expected to be added for several centuries.
 ### define `ESP_BLE_MESH_TIME_SETUP_SRV_DEFINE`
 
+_Define a time setup server._
 ```c
 #define ESP_BLE_MESH_TIME_SETUP_SRV_DEFINE (
     _name,
@@ -166,8 +163,15 @@ void oob_time_updated (
 }
 ```
 
+
+**Parameters:**
+
+
+* `_name` Variable name given to the time setup server. 
+* `_state_data` Pointer to the time state.
 ### define `ESP_BLE_MESH_TIME_SRV_DEFINE`
 
+_Define a time server._
 ```c
 #define ESP_BLE_MESH_TIME_SRV_DEFINE (
     _name,
@@ -182,8 +186,15 @@ void oob_time_updated (
 }
 ```
 
+
+**Parameters:**
+
+
+* `_name` Variable name tiven to the time server. 
+* `_state_data` Pointer to the time state.
 ### define `ESP_BLE_MESH_TIME_STATE_DEFINE`
 
+_Define a time state populated with default values._
 ```c
 #define ESP_BLE_MESH_TIME_STATE_DEFINE (
     _name
@@ -196,13 +207,22 @@ void oob_time_updated (
 }
 ```
 
+
+**Parameters:**
+
+
+* `_name` Variable name given to the time state.
 ### define `MAX_TIME_SERVER_MSG_SIZE`
 
-_Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1._
+_Max message size for time server._
 ```c
 #define MAX_TIME_SERVER_MSG_SIZE 11
 ```
 
+
+**Note:**
+
+Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1.
 ### define `MAX_TIME_SETUP_SERVER_MSG_SIZE`
 
 _Max message size for time setup server._
@@ -210,26 +230,38 @@ _Max message size for time setup server._
 #define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 ```
 
+
+**Note:**
+
+Max message sizes are calculated from message descriptions in section 5.2.1 of the BLE Mesh spec, v1.1.1.
 ### define `TAI_DELTA_ZERO`
 
+_BLE Mesh Time state value for a TAI-UTC delta of 0. TAI-UTC delta values below this number are negative._
 ```c
 #define TAI_DELTA_ZERO 0x00FF
 ```
 
 ### define `TAI_UTC_EPOCH_SECONDS`
 
+_UTC time of the TAI epoch, in seconds._
 ```c
 #define TAI_UTC_EPOCH_SECONDS 946684768
 ```
 
+
+**Note:**
+
+TAI epoch is `2000-01-01T00:00:00`, which corresponds to UTC time`1999-12-31T23:59:28`.
 ### define `TAI_UTC_OFFSET_AT_EPOCH`
 
+_The value of TAI-UTC delta at the TAI epoch._
 ```c
 #define TAI_UTC_OFFSET_AT_EPOCH 32
 ```
 
 ### define `TIME_ZONE_OFFSET_ZERO`
 
+_BLE Mesh Time state value for a Time Zone offset of 0. Time Zone offset values below this number are negative._
 ```c
 #define TIME_ZONE_OFFSET_ZERO 0x40
 ```

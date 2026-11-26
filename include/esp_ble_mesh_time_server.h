@@ -18,22 +18,58 @@ extern "C" {
 #endif
 
 /**
- * @brief Max message sizes are calculated from message descriptions in section 5.2.1
+ * @brief Max message size for time server.
+ *
+ * @note Max message sizes are calculated from message descriptions in section 5.2.1
  * of the BLE Mesh spec, v1.1.1.
  */
 #define MAX_TIME_SERVER_MSG_SIZE 11
 
 /**
- * @brief Max message size for time setup server
+ * @brief Max message size for time setup server.
+ *
+ * @note Max message sizes are calculated from message descriptions in section 5.2.1
+ * of the BLE Mesh spec, v1.1.1.
  */
 #define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 
+/**
+ * @brief UTC time of the TAI epoch, in seconds.
+ *
+ * @note TAI epoch is `2000-01-01T00:00:00`, which corresponds to UTC time `1999-12-31T23:59:28`.
+ */
 #define TAI_UTC_EPOCH_SECONDS 946684768
+
+/**
+ * @brief The value of TAI-UTC delta at the TAI epoch.
+ */
 #define TAI_UTC_OFFSET_AT_EPOCH 32
+
+/**
+ * @brief The TAI-UTC delta as of 31 December, 2016.
+ *
+ * @note The BIPM voted in 2026 to replace leap seconds with leap hours.
+ *       Leap hours are not expected to be added for several centuries.
+ */
 #define DEFAULT_TAI_UTC_OFFSET 37
+
+/**
+ * @brief BLE Mesh Time state value for a TAI-UTC delta of 0.
+ *        TAI-UTC delta values below this number are negative.
+ */
 #define TAI_DELTA_ZERO 0x00FF
+
+/**
+ * @brief BLE Mesh Time state value for a Time Zone offset of 0.
+ *        Time Zone offset values below this number are negative.
+ */
 #define TIME_ZONE_OFFSET_ZERO 0x40
 
+/**
+ * @brief Define a time state populated with default values.
+ *
+ * @param _name Variable name given to the time state.
+ */
 #define ESP_BLE_MESH_TIME_STATE_DEFINE(_name) \
     static esp_ble_mesh_time_state_t _name = { \
         .time.tai_utc_delta_curr = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET, \
@@ -43,6 +79,12 @@ extern "C" {
         .time_role = ESP_BLE_MESH_TIME_NONE, \
     }
 
+/**
+ * @brief Define a time server.
+ *
+ * @param _name       Variable name tiven to the time server.
+ * @param _state_data Pointer to the time state.
+ */
 #define ESP_BLE_MESH_TIME_SRV_DEFINE(_name, _state_data) \
     static esp_ble_mesh_time_srv_t _name = { \
         .rsp_ctrl = { \
@@ -53,6 +95,12 @@ extern "C" {
         .state = _state_data, \
     }
 
+/**
+ * @brief Define a time setup server.
+ *
+ * @param _name       Variable name given to the time setup server.
+ * @param _state_data Pointer to the time state.
+ */
 #define ESP_BLE_MESH_TIME_SETUP_SRV_DEFINE(_name, _state_data) \
     static esp_ble_mesh_time_setup_srv_t _name = { \
         .rsp_ctrl = { \
@@ -64,35 +112,35 @@ extern "C" {
     }
 
 /**
- * @brief BLE Mesh time server configuration
+ * @brief BLE Mesh time server configuration.
  */
 typedef struct {
   /**
    * @brief Pointer to the BLE Mesh time server.
    *
-   * @note  This pointer must remain valid during the lifetime
-   *        of the BLE Mesh device.
-   *        Shall not be set to NULL.
-   *        State property must not be NULL and must be shared
-   *        with time_setup_server.
+   * This pointer must remain valid during the lifetime
+   * of the BLE Mesh device.
+   * Shall not be set to NULL.
+   * State property must not be NULL and must be shared
+   * with time_setup_server.
    */
   esp_ble_mesh_time_srv_t *time_server;
   /**
    * @brief Pointer to the BLE Mesh time setup server.
    *
-   * @note  This pointer must remain valid during the lifetime
-   *        of the BLE Mesh device.
-   *        Shall not be set to NULL.
-   *        State property must not be NULL and must be shared
-   *        with time_server.
+   * This pointer must remain valid during the lifetime
+   * of the BLE Mesh device.
+   * Shall not be set to NULL.
+   * State property must not be NULL and must be shared
+   * with time_server.
    */
   esp_ble_mesh_time_setup_srv_t *time_setup_server;
   /**
    * @brief NVS Handle for settings persistence.
    *
-   * @note  When time server persistence is enabled
-   *        via ESP_BLE_MESH_TIME_SETTINGS, this must be a properly initialized handle
-   *        which must remain valid during the lifetime of the BLE Mesh device.
+   * When time server persistence is enabled via `CONFIG_ESP_BLE_MESH_TIME_SETTINGS`,
+   * this must be a properly initialized handle which must remain valid during
+   * the lifetime of the BLE Mesh device.
    */
   nvs_handle_t nvs_handle;
 } esp_ble_mesh_time_server_config_t;
@@ -114,7 +162,7 @@ void oob_time_updated(uint8_t uncertainty);
  * @note This API needs to be called after BLE Mesh Time callbacks are registered
  *       and BLE Mesh is initialized.
  *
- * @note The time server, time setup server, and state must be defined,
+ *       The time server, time setup server, and state must be defined,
  *       and the state must be set on both the time server and time setup server.
  *
  * @param[in] config: The time server configuration. Its contents must remain valid for the
