@@ -52,6 +52,8 @@ static app_time_persist_state_t persist_state = {
   .time_role = ESP_BLE_MESH_TIME_NONE,
 };
 
+static esp_timer_handle_t tz_update_timer;
+
 extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
 APP_BLE_MESH_MODEL_PUB_DEFINE(time_server_pub, MAX_TIME_SERVER_MSG_SIZE, ROLE_NODE);
@@ -159,35 +161,77 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
 }
 
 static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool persist) {
-  bool result = false;
-  char tz_str[14];
-  int16_t tz_offset = ((int16_t) timezone - TIME_ZONE_OFFSET_ZERO) * 15;
-  int16_t tz_hrs = tz_offset / 60;
-  int16_t tz_mins = tz_offset < 0 ? -1 * tz_offset % 60 : tz_offset % 60;
-  if (sprintf(tz_str, "<%+03d%02d>%d:%02d", tz_hrs, tz_mins, -1 * tz_hrs, tz_mins) >= 0) {
-    if (setenv("TZ", tz_str, 1) == 0) {
-      tzset();
-      ESP_LOGI(TAG, "time zone updated to %s (%s)", tz_str, tzname[0]);
-      result = true;
-    } else {
-      ESP_LOGW(TAG, "failed to set TZ=%s", tz_str);
+  // cancel any previously scheduled timezone update
+  // error checking not required here.
+  esp_timer_stop(tz_update_timer);
+
+  // update or schedule
+  time_state.time.time_zone_offset_new = timezone;
+
+  time_t delay = 0;
+  struct timeval schedule;
+  if (tai_zone_change != NULL) {
+    if (!(
+      tai_zone_change[0] == 0x00 &&
+      tai_zone_change[1] == 0x00 &&
+      tai_zone_change[2] == 0x00 &&
+      tai_zone_change[3] == 0x00 &&
+      tai_zone_change[4] == 0x00
+    )) {
+      schedule = ble_mesh_time_to_timeval(tai_zone_change, 0, time_state.time.tai_utc_delta_curr);
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      delay = schedule.tv_sec - now.tv_sec;
     }
-  } else {
-    ESP_LOGW(TAG, "failed to set timezone string: %+02d:%02d: %d", tz_hrs, tz_mins, errno);
   }
 
-  time_state.time.time_zone_offset_curr = timezone;
-  time_state.time.time_zone_offset_new = timezone;
-  memcpy(time_state.time.tai_zone_change, tai_zone_change, sizeof(time_state.time.tai_zone_change));
+  if (delay > 0) {
+    memcpy(time_state.time.tai_zone_change, tai_zone_change,  sizeof(time_state.time.tai_zone_change));
+  } else {
+    time_state.time.time_zone_offset_curr = timezone;
+    memset(time_state.time.tai_zone_change, 0x00, sizeof(time_state.time.tai_zone_change));
+  }
 
   if (persist) {
-    persist_state.time_zone_offset_curr = timezone;
     persist_state.time_zone_offset_new = timezone;
-    memcpy(persist_state.tai_zone_change, tai_zone_change,  sizeof(persist_state.tai_zone_change));
+    persist_state.time_zone_offset_curr = time_state.time.time_zone_offset_curr;
+    if (delay > 0) {
+      memcpy(persist_state.tai_zone_change, tai_zone_change,  sizeof(persist_state.tai_zone_change));
+    } else {
+      persist_state.time_zone_offset_curr = timezone;
+      memset(persist_state.tai_zone_change, 0x00, sizeof(persist_state.tai_zone_change));
+    }
     ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
   }
 
+  bool result = false;
+  if (delay > 0) {
+    ESP_LOGI(TAG, "scheduling timezone update");
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_start_once(tz_update_timer, (uint64_t) delay * 1000000));
+  } else {
+    ESP_LOGI(TAG, "setting timezone");
+    char tz_str[14];
+    int16_t tz_offset = ((int16_t) timezone - TIME_ZONE_OFFSET_ZERO) * 15;
+    int16_t tz_hrs = tz_offset / 60;
+    int16_t tz_mins = tz_offset < 0 ? -1 * tz_offset % 60 : tz_offset % 60;
+    if (sprintf(tz_str, "<%+03d%02d>%d:%02d", tz_hrs, tz_mins, -1 * tz_hrs, tz_mins) >= 0) {
+      if (setenv("TZ", tz_str, 1) == 0) {
+        tzset();
+        ESP_LOGI(TAG, "time zone updated to %s (%s)", tz_str, tzname[0]);
+        result = true;
+      } else {
+        ESP_LOGW(TAG, "failed to set TZ=%s", tz_str);
+      }
+    } else {
+      ESP_LOGW(TAG, "failed to set timezone string: %+02d:%02d: %d", tz_hrs, tz_mins, errno);
+    }
+  }
   return result;
+}
+
+static void tz_update_timer_cb(void *args) {
+  ESP_LOGI(TAG, "updating timezone from timer schedule");
+  set_timezone(time_state.time.time_zone_offset_new, NULL, true);
 }
 
 static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_status) {
@@ -235,7 +279,6 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         );
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_SET:
-        // TODO handle scheduled time zone change
         set_timezone(value->set.time_zone.time_zone_offset_new, value->set.time_zone.tai_zone_change, true);
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_GET:
@@ -400,6 +443,14 @@ void oob_time_updated(void) {
 esp_err_t ble_mesh_time_init(void) {
   bool exist;
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_restore(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state), &exist), TAG, "failed to restore time server state from nvs flash");
+
+  esp_timer_create_args_t timer_opts = {
+    .name = "esp_ble_mesh_tz_upd",
+    .skip_unhandled_events = false,
+    .dispatch_method = ESP_TIMER_TASK,
+    .callback = tz_update_timer_cb,
+  };
+  ESP_RETURN_ON_ERROR(esp_timer_create(&timer_opts, &tz_update_timer), TAG, "failed to create tz update timer");
   if (exist) {
     time_state.time_role = persist_state.time_role;
     time_state.time.time_authority = persist_state.time_authority;
@@ -411,13 +462,23 @@ esp_err_t ble_mesh_time_init(void) {
     memcpy(time_state.time.tai_delta_change, persist_state.tai_delta_change, sizeof(persist_state.tai_delta_change));
     memcpy(time_state.time.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
 
-    set_timezone(persist_state.time_zone_offset_curr, persist_state.tai_zone_change, false);
+    // update current timezone
+    set_timezone(persist_state.time_zone_offset_curr, NULL, false);
+
+    //reschedule tz update
+    set_timezone(persist_state.time_zone_offset_new, persist_state.tai_zone_change, false);
   }
   return ESP_OK;
 
 }
 
 esp_err_t ble_mesh_time_unprov() {
+  /*
+   * TODO decide how to propagate errors here.
+   * we need to do all of the things here on a best effort basis
+   */
+  esp_timer_stop_blocking(tz_update_timer, pdMS_TO_TICKS(1000));
+  esp_timer_delete(tz_update_timer);
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
   return ESP_OK;
 }
