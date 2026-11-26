@@ -7,9 +7,13 @@
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_networking_api.h"
 #include "esp_ble_mesh_time_scene_model_api.h"
+#include "esp_check.h"
+#include "esp_err.h"
 #include "esp_log.h"
 #include "esp_random.h"
 #include "esp_timer.h"
+
+#include "ble_mesh_example_nvs.h"
 
 #include "app/ble_mesh/time_scene_server.h"
 #include "app/ble_mesh/defs.h"
@@ -29,6 +33,7 @@
 #define TIME_ZONE_OFFSET_ZERO 0x40
 
 static const char *TAG = "app/ble_mesh/time_scene_server.c";
+static const char *NVS_KEY = "ble_mesh_time";
 
 static RTC_DATA_ATTR int64_t last_status_publish_ts = 0;
 
@@ -39,6 +44,10 @@ static esp_ble_mesh_time_state_t time_state = {
   .time.time_zone_offset_new = TIME_ZONE_OFFSET_ZERO,
   .time_role = ESP_BLE_MESH_TIME_NONE,
 };
+
+static app_time_persist_state_t persist_state = {0};
+
+extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
 APP_BLE_MESH_MODEL_PUB_DEFINE(time_server_pub, MAX_TIME_SERVER_MSG_SIZE, ROLE_NODE);
 esp_ble_mesh_time_srv_t time_server = {
@@ -135,6 +144,12 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
   time_state.time.time_authority = time_authority;
   time_state.time.tai_utc_delta_curr = tai_utc_delta_curr;
   time_state.time.time_zone_offset_curr = time_zone_offset_curr;
+
+  persist_state.time_zone_offset_curr = time_zone_offset_curr;
+  persist_state.tai_utc_delta_curr = tai_utc_delta_curr;
+  persist_state.uncertainty = uncertainty;
+  persist_state.time_authority = time_authority;
+  ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
   return res;
 }
 
@@ -201,6 +216,10 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         time_state.time.time_zone_offset_curr = value->set.time_zone.time_zone_offset_new;
         memcpy(value->set.time_zone.tai_zone_change, time_state.time.tai_zone_change, sizeof(time_state.time.tai_zone_change));
         memcpy(&time_state.time.tai_zone_change, tz_status_msg.tai_zone_change, sizeof(tz_status_msg.tai_zone_change));
+
+        persist_state.time_zone_offset_curr = value->set.time_zone.time_zone_offset_new;
+        memcpy(value->set.time_zone.tai_zone_change, persist_state.tai_zone_change, sizeof(persist_state.tai_zone_change));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_GET:
         tz_status_msg.time_zone_offset_curr = time_state.time.time_zone_offset_curr;
@@ -210,8 +229,15 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         );
         break;
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_SET:
+        time_state.time.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
+        // TODO handle scheduled tai change
         time_state.time.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
         memcpy(value->set.tai_utc_delta.tai_delta_change, time_state.time.tai_delta_change, sizeof(time_state.time.tai_delta_change));
+
+        persist_state.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
+        persist_state.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
+        memcpy(value->set.tai_utc_delta.tai_delta_change, persist_state.tai_delta_change, sizeof(persist_state.tai_delta_change));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_GET:
         memcpy(time_state.time.tai_zone_change, tai_delta_status_msg.tai_delta_change, sizeof(tai_delta_status_msg.tai_delta_change));
@@ -225,6 +251,8 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_ROLE_SET:
         time_state.time_role = value->set.time_role.time_role;
+        persist_state.time_role = value->set.time_role.time_role;
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TIME_ROLE_GET:
         time_role_status_msg.time_role = time_state.time_role;
@@ -349,4 +377,20 @@ void oob_time_updated(void) {
     // update last publish time
     last_status_publish_ts = esp_timer_get_time();
   }
+}
+
+esp_err_t ble_mesh_time_init(void) {
+  bool exist;
+  ESP_RETURN_ON_ERROR(ble_mesh_nvs_restore(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state), &exist), TAG, "failed to restore time server state from nvs flash");
+  time_state.time_role = persist_state.time_role;
+  time_state.time.time_authority = persist_state.time_authority;
+  time_state.time.time_zone_offset_curr = persist_state.time_zone_offset_curr;
+  time_state.time.time_zone_offset_new = persist_state.time_zone_offset_new;
+  time_state.time.tai_utc_delta_curr = persist_state.tai_utc_delta_curr;
+  time_state.time.tai_utc_delta_new = persist_state.tai_utc_delta_new;
+  time_state.time.uncertainty = persist_state.uncertainty;
+  memcpy(persist_state.tai_delta_change, time_state.time.tai_delta_change, sizeof(persist_state.tai_delta_change));
+  memcpy(persist_state.tai_zone_change, time_state.time.tai_zone_change, sizeof(persist_state.tai_zone_change));
+  return ESP_OK;
+
 }

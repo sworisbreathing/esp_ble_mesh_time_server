@@ -10,6 +10,7 @@
 #include "esp_ble_mesh_time_scene_model_api.h"
 
 #include "ble_mesh_example_init.h"
+#include "ble_mesh_example_nvs.h"
 
 #include "app/ble_mesh.h"
 #include "app/ble_mesh/config_server.h"
@@ -40,6 +41,8 @@ static esp_ble_mesh_comp_t composition = {
     .elements = elements,
 };
 
+nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
+
 static esp_err_t ble_mesh_init(void)
 {
     esp_err_t err = ESP_OK;
@@ -58,6 +61,8 @@ static esp_err_t ble_mesh_init(void)
         return err;
     }
 
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_init());
+
 #ifdef CONFIG_IDF_TARGET
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_ble_mesh_set_unprovisioned_device_name(CONFIG_IDF_TARGET));
 #endif
@@ -75,6 +80,7 @@ static esp_err_t ble_mesh_init(void)
 }
 
 esp_err_t app_ble_mesh_init(void) {
+  ESP_RETURN_ON_ERROR(ble_mesh_nvs_open(&APP_BLE_MESH_NVS_HANDLE), TAG, "failed to open nvs handle");
   ESP_RETURN_ON_ERROR(bluetooth_init(), TAG, "failed to initialise bluetooth");
   ble_mesh_get_dev_uuid(dev_uuid);
   ESP_RETURN_ON_ERROR(ble_mesh_init(), TAG, "failed to initialise ble mesh");
