@@ -16,6 +16,12 @@
 
 #define CID_ESP 0x02E5
 
+/*
+ * msg len is the maximum message size from the BT Mesh model spec (including opcode)
+ * see BT Mesh model spec v1.1.1, section 3.2.1
+ */
+#define MAX_ONOFF_MESSAGE_SIZE 6
+
 static const char *TAG = "app/ble_mesh.c";
 
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
@@ -39,7 +45,7 @@ static esp_ble_mesh_cfg_srv_t config_server = {
     .default_ttl = 7,
 };
 
-ESP_BLE_MESH_MODEL_PUB_DEFINE(onoff_pub_0, 2 + 3, ROLE_NODE);
+ESP_BLE_MESH_MODEL_PUB_DEFINE(onoff_pub_0, MAX_ONOFF_MESSAGE_SIZE, ROLE_NODE);
 static esp_ble_mesh_gen_onoff_srv_t onoff_server_0 = {
     .rsp_ctrl = {
         .get_auto_rsp = ESP_BLE_MESH_SERVER_AUTO_RSP,
