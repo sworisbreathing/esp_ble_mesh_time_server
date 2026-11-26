@@ -271,11 +271,15 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
 #endif /* CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE */
 
     res = true;
-    struct tm t1 = {0};
-    localtime_r(&t.tv_sec, &t1);
-    char time_str[64];
-    strftime(time_str, sizeof(time_str), "%F %T%z", &t1);
-    ESP_LOGI(TAG, "time set: %s", time_str);
+#if ESP_LOG_ENABLED(ESP_LOG_INFO)
+    if (esp_log_level_get(TAG) >= ESP_LOG_INFO) {
+      struct tm t1 = {0};
+      localtime_r(&t.tv_sec, &t1);
+      char time_str[64];
+      strftime(time_str, sizeof(time_str), "%F %T%z", &t1);
+      ESP_LOGI(TAG, "time set: %s", time_str);
+    }
+#endif
   }
 
   memcpy(time_state.time.tai_seconds, tai_seconds, 5);
