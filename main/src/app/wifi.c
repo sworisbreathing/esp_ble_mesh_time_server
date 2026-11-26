@@ -7,6 +7,7 @@
 #include "esp_wifi_default.h"
 #include "freertos/idf_additions.h"
 
+#include "app/event_loop.h"
 #include "app/wifi.h"
 
 /* The event group allows multiple bits for each event, but we only care about two events:
@@ -87,11 +88,7 @@ esp_err_t initialise_wifi(void) {
   ESP_RETURN_ON_ERROR(esp_netif_init(), TAG, "failed to init netif");
   s_wifi_event_group = xEventGroupCreate();
 
-  esp_err_t err;
-  err = esp_event_loop_create_default();
-  if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
-    return err;
-  }
+  ESP_RETURN_ON_ERROR(init_default_event_loop(), TAG, "failed to init default event loop");
 
   sta_netif = esp_netif_create_default_wifi_sta();
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
