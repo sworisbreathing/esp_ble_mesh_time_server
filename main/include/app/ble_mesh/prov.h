@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-esp_ble_mesh_prov_t *ble_mesh_prov_defs(uint8_t *uuid);
+extern esp_ble_mesh_prov_t provision;
 
 void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
   esp_ble_mesh_prov_cb_param_t *param);

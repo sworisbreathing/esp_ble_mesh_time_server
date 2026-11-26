@@ -15,6 +15,8 @@
 extern "C" {
 #endif
 
+extern esp_ble_mesh_cfg_srv_t config_server;
+
 void ble_mesh_config_server_cb(esp_ble_mesh_cfg_server_cb_event_t event,
                                               esp_ble_mesh_cfg_server_cb_param_t *param);
 

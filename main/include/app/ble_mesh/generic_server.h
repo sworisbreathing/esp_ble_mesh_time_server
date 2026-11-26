@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+extern esp_ble_mesh_model_pub_t onoff_pub_0;
+extern esp_ble_mesh_gen_onoff_srv_t onoff_server_0;
+
 void ble_mesh_generic_server_cb(esp_ble_mesh_generic_server_cb_event_t event,
                                                esp_ble_mesh_generic_server_cb_param_t *param);
 

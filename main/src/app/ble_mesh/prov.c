@@ -3,7 +3,7 @@
 static const char *TAG = "app/ble_mesh/prov.c";
 
 /* Disable OOB security for SILabs Android app */
-static esp_ble_mesh_prov_t provision = {
+esp_ble_mesh_prov_t provision = {
 #if 0
     .output_size = 4,
     .output_actions = ESP_BLE_MESH_DISPLAY_NUMBER,
@@ -53,9 +53,4 @@ void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
     default:
         break;
     }
-}
-
-esp_ble_mesh_prov_t *ble_mesh_prov_defs(uint8_t *uuid) {
-  provision.uuid = uuid;
-  return &provision;
 }
