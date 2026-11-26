@@ -13,6 +13,11 @@
 
 #include "esp_err.h"
 #include "esp_log.h"
+#include "nvs.h"
+
+#if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
+#include "ble_mesh_example_nvs.h"
+#endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
 #include "board.h"
 #include "app/nvs_flash.h"
@@ -21,6 +26,8 @@
 #include "app/wifi.h"
 
 #define TAG "main.c"
+
+static nvs_handle_t s_nvs_handle;
 
 void app_main(void)
 {
@@ -40,8 +47,12 @@ void app_main(void)
 
     ESP_ERROR_CHECK(nvs_flash_init_or_erase());
 
+#if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
+    ESP_ERROR_CHECK(ble_mesh_nvs_open(&s_nvs_handle));
+#endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
+
     /* Initialize the Bluetooth Mesh Subsystem */
-    ESP_ERROR_CHECK(app_ble_mesh_init());
+    ESP_ERROR_CHECK(app_ble_mesh_init(s_nvs_handle));
 
     /* Initialize Wi-Fi */
     ESP_ERROR_CHECK(initialise_wifi());

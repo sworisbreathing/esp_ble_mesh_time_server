@@ -3,6 +3,7 @@
 
 #include "esp_ble_mesh_defs.h"
 #include "esp_ble_mesh_time_scene_model_api.h"
+#include "nvs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,7 +84,7 @@ void oob_time_updated(void);
  *    - error codes returned by \c esp_timer_create
  */
 esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_server,
-                                          esp_ble_mesh_time_setup_srv_t *time_setup_server);
+                                          esp_ble_mesh_time_setup_srv_t *time_setup_server, nvs_handle_t nvs_handle);
 
 esp_err_t ble_mesh_time_deinit(void);
 

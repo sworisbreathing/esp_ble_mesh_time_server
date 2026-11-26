@@ -15,6 +15,7 @@
 #include "freertos/projdefs.h"
 
 #include "ble_mesh_example_nvs.h"
+#include "nvs.h"
 
 #include "app/ble_mesh/time_scene_server.h"
 
@@ -33,6 +34,8 @@ typedef struct {
 
 static const char *NVS_KEY = "ble_mesh_time";
 
+static nvs_handle_t s_nvs_handle;
+
 static app_time_persist_state_t persist_state = {
   .time_zone_offset_curr = TIME_ZONE_OFFSET_ZERO,
   .time_zone_offset_new = TIME_ZONE_OFFSET_ZERO,
@@ -40,8 +43,6 @@ static app_time_persist_state_t persist_state = {
   .tai_utc_delta_new = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET,
   .time_role = ESP_BLE_MESH_TIME_NONE,
 };
-
-extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
 static const char *TAG = "app/ble_mesh/time_scene_server.c";
@@ -127,7 +128,7 @@ static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool 
       persist_state.time_zone_offset_curr = timezone;
       memset(persist_state.tai_zone_change, 0x00, sizeof(persist_state.tai_zone_change));
     }
-    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(s_nvs_handle, NVS_KEY, &persist_state, sizeof(persist_state)));
   }
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
@@ -199,7 +200,7 @@ static void set_tai_utc_delta(uint16_t tai_utc_delta, const uint8_t *tai_delta_c
       persist_state.tai_utc_delta_curr = tai_utc_delta;
       memset(persist_state.tai_delta_change, 0x00, sizeof(persist_state.tai_delta_change));
     }
-    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(s_nvs_handle, NVS_KEY, &persist_state, sizeof(persist_state)));
   }
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 }
@@ -264,7 +265,7 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
   persist_state.time_zone_offset_curr = time_zone_offset_curr;
   persist_state.uncertainty = uncertainty;
   persist_state.time_authority = time_authority;
-  ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+  ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(s_nvs_handle, NVS_KEY, &persist_state, sizeof(persist_state)));
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
   return res;
@@ -352,7 +353,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
 
 #if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
         persist_state.time_role = value->set.time_role.time_role;
-        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(s_nvs_handle, NVS_KEY, &persist_state, sizeof(persist_state)));
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
         __attribute__ ((fallthrough));
@@ -479,7 +480,7 @@ void oob_time_updated(void) {
   }
 }
 
-esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_time_setup_srv_t *time_setup_srv) {
+esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_time_setup_srv_t *time_setup_srv, nvs_handle_t nvs_handle) {
   if (time_srv == NULL || time_setup_srv == NULL) {
     ESP_LOGE(TAG, "time server and/or time setup server were NULL");
     return ESP_ERR_INVALID_ARG;
@@ -492,6 +493,10 @@ esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_tim
     ESP_LOGE(TAG, "time server and time setup server must have the same state");
     return ESP_ERR_INVALID_ARG;
   }
+
+#if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
+  s_nvs_handle = nvs_handle;
+#endif
 
   time_server = time_srv;
 
@@ -511,7 +516,7 @@ esp_err_t ble_mesh_time_init(esp_ble_mesh_time_srv_t *time_srv, esp_ble_mesh_tim
 
 #if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
   bool exist;
-  ESP_RETURN_ON_ERROR(ble_mesh_nvs_restore(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state), &exist), TAG, "failed to restore time server state from nvs flash");
+  ESP_RETURN_ON_ERROR(ble_mesh_nvs_restore(s_nvs_handle, NVS_KEY, &persist_state, sizeof(persist_state), &exist), TAG, "failed to restore time server state from nvs flash");
 
   if (exist) {
     time_server->state->time_role = persist_state.time_role;
@@ -585,7 +590,8 @@ esp_err_t ble_mesh_time_deinit() {
   time_server = NULL;
 
 #if CONFIG_ESP_BLE_MESH_TIME_SETTINGS
-  ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
+  ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(s_nvs_handle, NVS_KEY), TAG, "failed to erase persisted nvs time");
+  s_nvs_handle = 0;
 #endif /* CONFIG_ESP_BLE_MESH_TIME_SETTINGS */
 
   return ESP_OK;

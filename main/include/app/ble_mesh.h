@@ -10,6 +10,7 @@
 #define _APP_BLE_MESH_H_
 
 #include "esp_err.h"
+#include "nvs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +21,7 @@ extern "C" {
  * @see blueooth_init()
  * @see ble_mesh_get_dev_uuid()
  */
-esp_err_t app_ble_mesh_init(void);
+esp_err_t app_ble_mesh_init(nvs_handle_t nvs_handle);
 
 #ifdef __cplusplus
 }

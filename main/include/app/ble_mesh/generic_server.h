@@ -10,6 +10,7 @@
 #define _APP_BLE_MESH_GENERIC_SERVER_H_
 
 #include "esp_ble_mesh_generic_model_api.h"
+#include "nvs.h"
 
 #ifdef __cplusplus
 extern "C" {
