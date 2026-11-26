@@ -55,6 +55,7 @@ static app_time_persist_state_t persist_state = {
 };
 
 static esp_timer_handle_t tz_update_timer;
+static esp_timer_handle_t tai_utc_delta_update_timer;
 
 extern nvs_handle_t APP_BLE_MESH_NVS_HANDLE;
 
@@ -176,6 +177,51 @@ static bool set_timezone(uint8_t timezone, const uint8_t *tai_zone_change, bool 
   return result;
 }
 
+static void set_tai_utc_delta(uint16_t tai_utc_delta, const uint8_t *tai_delta_change, bool persist) {
+  // cancel any previously scheduled delta update
+  // error checking not required here.
+  esp_timer_stop(tai_utc_delta_update_timer);
+
+  // update or schedule
+  time_state.time.tai_utc_delta_new = tai_utc_delta;
+
+  time_t delay = 0;
+  struct timeval schedule;
+  if (tai_delta_change != NULL) {
+    if (!(
+      tai_delta_change[0] == 0x00 &&
+      tai_delta_change[1] == 0x00 &&
+      tai_delta_change[2] == 0x00 &&
+      tai_delta_change[3] == 0x00 &&
+      tai_delta_change[4] == 0x00
+    )) {
+      schedule = ble_mesh_time_to_timeval(tai_delta_change, 0, time_state.time.tai_utc_delta_curr);
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      delay = schedule.tv_sec - now.tv_sec;
+    }
+  }
+
+  if (delay > 0) {
+    memcpy(time_state.time.tai_delta_change, tai_delta_change,  sizeof(time_state.time.tai_delta_change));
+  } else {
+    time_state.time.tai_utc_delta_curr = tai_utc_delta;
+    memset(time_state.time.tai_delta_change, 0x00, sizeof(time_state.time.tai_delta_change));
+  }
+
+  if (persist) {
+    persist_state.tai_utc_delta_new = tai_utc_delta;
+    persist_state.tai_utc_delta_curr = time_state.time.tai_utc_delta_curr;
+    if (delay > 0) {
+      memcpy(persist_state.tai_delta_change, tai_delta_change,  sizeof(persist_state.tai_delta_change));
+    } else {
+      persist_state.tai_utc_delta_curr = tai_utc_delta;
+      memset(persist_state.tai_delta_change, 0x00, sizeof(persist_state.tai_delta_change));
+    }
+    ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+  }
+}
+
 static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertainty, uint16_t time_authority, uint16_t tai_utc_delta_curr, uint8_t time_zone_offset_curr) {
   bool res = false;
   if (!(
@@ -186,6 +232,7 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     tai_seconds[4] == 0x00
   )) {
     bool has_pending_tz_update = esp_timer_is_active(tz_update_timer);
+    bool has_pending_tai_delta_update = esp_timer_is_active(tai_utc_delta_update_timer);
     char err_str[6];
     struct timeval t = ble_mesh_time_to_timeval(tai_seconds, subsecond, tai_utc_delta_curr);
     if (settimeofday(&t, NULL) != 0) {
@@ -195,6 +242,9 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
     }
     if (has_pending_tz_update) {
       set_timezone(time_state.time.time_zone_offset_new, time_state.time.tai_zone_change, true);
+    }
+    if (has_pending_tai_delta_update) {
+      set_tai_utc_delta(time_state.time.tai_utc_delta_new, time_state.time.tai_delta_change, true);
     }
 
     res = true;
@@ -223,6 +273,11 @@ static bool set_time(uint8_t *tai_seconds, uint8_t subsecond, uint8_t uncertaint
 static void tz_update_timer_cb(void *args) {
   ESP_LOGI(TAG, "updating timezone from timer schedule");
   set_timezone(time_state.time.time_zone_offset_new, NULL, true);
+}
+
+static void tai_utc_delta_update_timer_cb(void *args) {
+  ESP_LOGI(TAG, "updating tai-utc delta from timer schedule");
+  set_tai_utc_delta(time_state.time.tai_utc_delta_new, NULL, true);
 }
 
 static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_status) {
@@ -282,15 +337,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         );
         break;
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_SET:
-        time_state.time.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
-        // TODO handle scheduled tai change
-        time_state.time.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
-        memcpy(time_state.time.tai_delta_change, value->set.tai_utc_delta.tai_delta_change, sizeof(time_state.time.tai_delta_change));
-
-        persist_state.tai_utc_delta_curr = value->set.tai_utc_delta.tai_utc_delta_new;
-        persist_state.tai_utc_delta_new = value->set.tai_utc_delta.tai_utc_delta_new;
-        memcpy(persist_state.tai_delta_change, value->set.tai_utc_delta.tai_delta_change, sizeof(persist_state.tai_delta_change));
-        ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_nvs_store(APP_BLE_MESH_NVS_HANDLE, NVS_KEY, &persist_state, sizeof(persist_state)));
+        set_tai_utc_delta(value->set.tai_utc_delta.tai_utc_delta_new, value->set.tai_utc_delta.tai_delta_change, true);
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_GET:
         memcpy(tai_delta_status_msg.tai_delta_change, time_state.time.tai_zone_change, sizeof(tai_delta_status_msg.tai_delta_change));
@@ -443,6 +490,9 @@ esp_err_t ble_mesh_time_init(void) {
     .callback = tz_update_timer_cb,
   };
   ESP_RETURN_ON_ERROR(esp_timer_create(&timer_opts, &tz_update_timer), TAG, "failed to create tz update timer");
+  timer_opts.name = "esp_ble_mesh_tai_utc_upd";
+  timer_opts.callback = tai_utc_delta_update_timer_cb;
+  ESP_RETURN_ON_ERROR(esp_timer_create(&timer_opts, &tai_utc_delta_update_timer), TAG, "failed to create tai-utc delta update timer");
   if (exist) {
     time_state.time_role = persist_state.time_role;
     time_state.time.time_authority = persist_state.time_authority;
@@ -470,6 +520,23 @@ esp_err_t ble_mesh_time_init(void) {
       time_state.time.time_zone_offset_new = time_state.time.time_zone_offset_curr;
       memset(time_state.time.tai_zone_change, 0x00, sizeof(time_state.time.tai_zone_change));
     }
+
+    // update tai-utc delta
+    set_tai_utc_delta(persist_state.tai_utc_delta_curr, NULL, false);
+
+    // reschedule tai-utc delta update
+    if (!(persist_state.tai_delta_change[0] == 0x00 &&
+          persist_state.tai_delta_change[1] == 0x00 &&
+          persist_state.tai_delta_change[2] == 0x00 &&
+          persist_state.tai_delta_change[3] == 0x00 &&
+          persist_state.tai_delta_change[4] == 0x00
+    )) {
+      set_tai_utc_delta(persist_state.tai_utc_delta_new, persist_state.tai_delta_change, false);
+    } else {
+      esp_timer_stop_blocking(tai_utc_delta_update_timer, pdMS_TO_TICKS(1000));
+      time_state.time.tai_utc_delta_new = time_state.time.tai_utc_delta_curr;
+      memset(time_state.time.tai_delta_change, 0x00, sizeof(time_state.time.tai_delta_change));
+    }
   }
   return ESP_OK;
 
@@ -482,6 +549,10 @@ esp_err_t ble_mesh_time_unprov() {
    */
   esp_timer_stop_blocking(tz_update_timer, pdMS_TO_TICKS(1000));
   esp_timer_delete(tz_update_timer);
+
+  esp_timer_stop_blocking(tai_utc_delta_update_timer);
+  esp_timer_delete(tai_utc_delta_update_timer);
+
   ESP_RETURN_ON_ERROR(ble_mesh_nvs_erase(APP_BLE_MESH_NVS_HANDLE, NVS_KEY), TAG, "failed to erase persisted nvs time");
   return ESP_OK;
 }
