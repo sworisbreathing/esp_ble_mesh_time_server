@@ -27,7 +27,9 @@
 #define MAX_TIME_SERVER_MSG_SIZE 11
 #define MAX_TIME_SETUP_SERVER_MSG_SIZE 11
 
-#define TAI_UTC_OFFSET_SECONDS 946684768
+#define TAI_UTC_EPOCH_SECONDS 946684768
+#define TAI_UTC_OFFSET_AT_EPOCH 32
+#define DEFAULT_TAI_UTC_OFFSET 37
 #define TAI_DELTA_ZERO 0x00FF
 #define TIME_ZONE_OFFSET_ZERO 0x40
 
@@ -37,8 +39,8 @@ static const char *NVS_KEY = "ble_mesh_time";
 static int64_t last_status_publish_ts = 0;
 
 static esp_ble_mesh_time_state_t time_state = {
-  .time.tai_utc_delta_curr = TAI_DELTA_ZERO + 37,
-  .time.tai_utc_delta_new = TAI_DELTA_ZERO + 37,
+  .time.tai_utc_delta_curr = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET,
+  .time.tai_utc_delta_new = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET,
   .time.time_zone_offset_curr = TIME_ZONE_OFFSET_ZERO,
   .time.time_zone_offset_new = TIME_ZONE_OFFSET_ZERO,
   .time_role = ESP_BLE_MESH_TIME_NONE,
@@ -47,8 +49,8 @@ static esp_ble_mesh_time_state_t time_state = {
 static app_time_persist_state_t persist_state = {
   .time_zone_offset_curr = TIME_ZONE_OFFSET_ZERO,
   .time_zone_offset_new = TIME_ZONE_OFFSET_ZERO,
-  .tai_utc_delta_curr = TAI_DELTA_ZERO + 37,
-  .tai_utc_delta_new = TAI_DELTA_ZERO + 37,
+  .tai_utc_delta_curr = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET,
+  .tai_utc_delta_new = TAI_DELTA_ZERO + DEFAULT_TAI_UTC_OFFSET,
   .time_role = ESP_BLE_MESH_TIME_NONE,
 };
 
@@ -78,7 +80,7 @@ esp_ble_mesh_time_setup_srv_t time_setup_server = {
 
 static inline struct timeval ble_mesh_time_to_timeval(const uint8_t *tai_seconds, const uint8_t subsecond, const uint16_t tai_utc_delta_curr) {
   // convert ble mesh tai seconds to epoch seconds
-  time_t epoch_seconds = (time_t)TAI_UTC_OFFSET_SECONDS;
+  time_t epoch_seconds = (time_t)TAI_UTC_EPOCH_SECONDS;
   epoch_seconds += (time_t) tai_seconds[0]       |
                    (time_t) tai_seconds[1] <<  8 |
                    (time_t) tai_seconds[2] << 16 |
@@ -232,7 +234,7 @@ static inline void populate_time_status(esp_ble_mesh_time_status_cb_t *time_stat
     return;
   }
 
-  tm.tv_sec -= TAI_UTC_OFFSET_SECONDS;
+  tm.tv_sec -= TAI_UTC_EPOCH_SECONDS;
   tm.tv_sec += (time_state.time.tai_utc_delta_curr - TAI_DELTA_ZERO);
   time_status->tai_seconds[0] = (uint8_t) tm.tv_sec;
   time_status->tai_seconds[1] = (uint8_t) (tm.tv_sec >> 8);
