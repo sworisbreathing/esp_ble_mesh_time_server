@@ -50,3 +50,10 @@ in as simple a way as is practical.
 
 Long-term it is desirable to get fixes into ESP-BLE-MESH itself rather than
 having to rely on a third-party component, but for now, this will have to do.
+
+## Documentation
+
+For detailed information about the ESP BLE Mesh Time Server component,
+including API reference and user guides, please visit:
+
+* **Programming Guide & API Reference**: [ESP BLE Mesh Time Server Documentation](https://sworisbreathing.github.io/esp_ble_mesh_time_server/)
