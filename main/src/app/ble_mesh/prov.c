@@ -2,7 +2,6 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
-#include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/time_scene_server.h"
 #include "app/ble_mesh/prov.h"
 
@@ -47,13 +46,11 @@ void ble_mesh_provisioning_cb(esp_ble_mesh_prov_cb_event_t event,
         break;
     case ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT");
-        COEX_BLE_CLEAR(ESP_COEX_BLE_ST_MESH_CONFIG);
         prov_complete(param->node_prov_complete.net_idx, param->node_prov_complete.addr,
             param->node_prov_complete.flags, param->node_prov_complete.iv_index);
         break;
     case ESP_BLE_MESH_NODE_PROV_RESET_EVT:
         ESP_LOGI(TAG, "ESP_BLE_MESH_NODE_PROV_RESET_EVT");
-        COEX_BLE_SET(ESP_COEX_BLE_ST_MESH_CONFIG);
         ESP_ERROR_CHECK_WITHOUT_ABORT(ble_mesh_time_unprov());
         ESP_LOGW(TAG, "Restarting");
         esp_restart();

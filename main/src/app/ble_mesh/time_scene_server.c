@@ -16,7 +16,6 @@
 
 #include "ble_mesh_example_nvs.h"
 
-#include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/time_scene_server.h"
 #include "app/ble_mesh/defs.h"
 
@@ -350,9 +349,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TIME_GET:
         populate_time_status(&time_status);
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_STATUS, sizeof(time_status), (uint8_t *) &time_status)
-        );
+        esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_STATUS, sizeof(time_status), (uint8_t *) &time_status);
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_ZONE_SET:
         set_timezone(value->set.time_zone.time_zone_offset_new, value->set.time_zone.tai_zone_change, true);
@@ -361,9 +358,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         tz_status_msg.time_zone_offset_curr = time_state.time.time_zone_offset_curr;
         tz_status_msg.time_zone_offset_new = time_state.time.time_zone_offset_new;
         memcpy(tz_status_msg.tai_zone_change, &time_state.time.tai_zone_change,  sizeof(tz_status_msg.tai_zone_change));
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ZONE_STATUS, sizeof(tz_status_msg), (uint8_t *) &tz_status_msg)
-        );
+        esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ZONE_STATUS, sizeof(tz_status_msg), (uint8_t *) &tz_status_msg);
         break;
       case ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_SET:
 #if CONFIG_ESP_BLE_MESH_TIME_UTC_DELTA_ENABLE
@@ -376,9 +371,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         tai_delta_status_msg.tai_utc_delta_new = time_state.time.tai_utc_delta_new;
         tai_delta_status_msg.padding_1 = 0b0;
         tai_delta_status_msg.padding_2 = 0b0;
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_STATUS, sizeof(tai_delta_status_msg), (uint8_t *) &tai_delta_status_msg)
-        );
+        esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TAI_UTC_DELTA_STATUS, sizeof(tai_delta_status_msg), (uint8_t *) &tai_delta_status_msg);
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_ROLE_SET:
         time_state.time_role = value->set.time_role.time_role;
@@ -387,9 +380,7 @@ static void handle_time_msg(esp_ble_mesh_model_t *model,
         __attribute__ ((fallthrough));
       case ESP_BLE_MESH_MODEL_OP_TIME_ROLE_GET:
         time_role_status_msg.time_role = time_state.time_role;
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ROLE_STATUS, sizeof(time_role_status_msg), (uint8_t *) &time_role_status_msg)
-        );
+        esp_ble_mesh_server_model_send_msg(model, ctx, ESP_BLE_MESH_MODEL_OP_TIME_ROLE_STATUS, sizeof(time_role_status_msg), (uint8_t *) &time_role_status_msg);
         break;
       case ESP_BLE_MESH_MODEL_OP_TIME_STATUS:
         if (time_state.time_role == ESP_BLE_MESH_TIME_RELAY ||

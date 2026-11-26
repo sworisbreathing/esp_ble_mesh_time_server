@@ -3,7 +3,6 @@
 #include "esp_check.h"
 #include "esp_log.h"
 
-#include "app/ble_mesh/coexist.h"
 #include "app/ble_mesh/defs.h"
 #include "app/ble_mesh/generic_server.h"
 
@@ -162,10 +161,8 @@ static void handle_gen_onoff_msg(esp_ble_mesh_model_t *model,
 
     switch (ctx->recv_op) {
     case ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_GET:
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_server_model_send_msg(model, ctx,
-              ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS, sizeof(srv->state.onoff), &srv->state.onoff)
-        );
+        esp_ble_mesh_server_model_send_msg(model, ctx,
+            ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS, sizeof(srv->state.onoff), &srv->state.onoff);
         break;
     case ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET:
     case ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK:
@@ -176,15 +173,11 @@ static void handle_gen_onoff_msg(esp_ble_mesh_model_t *model,
             srv->state.onoff = set->onoff;
         }
         if (ctx->recv_op == ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_SET) {
-            COEX_BLE_TRAFFIC(
             esp_ble_mesh_server_model_send_msg(model, ctx,
-                ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS, sizeof(srv->state.onoff), &srv->state.onoff)
-            );
+                ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS, sizeof(srv->state.onoff), &srv->state.onoff);
         }
-        COEX_BLE_TRAFFIC(
-          esp_ble_mesh_model_publish(model, ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS,
-              sizeof(srv->state.onoff), &srv->state.onoff, ROLE_NODE)
-        );
+        esp_ble_mesh_model_publish(model, ESP_BLE_MESH_MODEL_OP_GEN_ONOFF_STATUS,
+            sizeof(srv->state.onoff), &srv->state.onoff, ROLE_NODE);
         change_led_state(model, ctx, srv->state.onoff);
         break;
     default:
