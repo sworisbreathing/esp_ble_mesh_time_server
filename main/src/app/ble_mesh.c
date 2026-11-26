@@ -26,7 +26,6 @@ static const char *TAG = "app/ble_mesh.c";
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
 ESP_BLE_MESH_MODEL_PUB_DEFINE(time_server_pub, MAX_TIME_SERVER_MSG_SIZE, ROLE_NODE);
-ESP_BLE_MESH_MODEL_PUB_DEFINE(time_setup_pub, MAX_TIME_SETUP_SERVER_MSG_SIZE, ROLE_NODE);
 ESP_BLE_MESH_MODEL_PUB_DEFINE(onoff_pub_0, MAX_ONOFF_MESSAGE_SIZE, ROLE_NODE);
 
 static esp_ble_mesh_model_t root_models[] = {
