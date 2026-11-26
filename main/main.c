@@ -17,6 +17,7 @@
 #include "board.h"
 #include "app/nvs_flash.h"
 #include "app/ble_mesh.h"
+#include "app/sntp.h"
 #include "app/wifi.h"
 
 #define TAG "main.c"
@@ -34,4 +35,6 @@ void app_main(void)
 
     /* Initialize Wi-Fi */
     ESP_ERROR_CHECK(initialise_wifi());
+
+    ESP_ERROR_CHECK(init_sntp());
 }
