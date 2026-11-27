@@ -1,6 +1,6 @@
 ---
 version: "1.0.0-alpha.1"
-description: Time Server for ESP-BLE-MESH
+description: A Time Server for ESP-BLE-MESH which integrates with the System Time API
 url: https://github.com/sworisbreathing/esp_ble_mesh_time_server
 repository: https://github.com/sworisbreathing/esp_ble_mesh_time_server.git
 license: Apache-2.0
