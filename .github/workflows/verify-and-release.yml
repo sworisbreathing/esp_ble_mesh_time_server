@@ -28,6 +28,8 @@ jobs:
       issues: write # to be able to comment on released issues
       pull-requests: write # to be able to comment on released pull requests
       id-token: write # to enable use of OIDC for trusted publishing and npm provenance
+    outputs:
+      release_sha: ${{ steps.record_release_sha.outputs.release_sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -46,9 +48,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release # <- The Run Commnand
+      - name: Record Release SHA
+        id: record_release_sha
+        run: echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   upload-staging:
     needs: release
     uses: $/.github/workflows/upload-staging.yml
     permissions:
       id-token: write
+    with:
+      release_sha: ${{ needs.release.outputs.release_sha }}
