@@ -12,6 +12,5 @@ plugins:
   - - '@semantic-release/exec'
     - prepareCmd: >
         sed -i 's/^version: .*/version: "${nextRelease.version}"/' idf_component.yml
-        &&
-        cat idf_component.yml
+  - '@semantic-release/git'
   - '@semantic-release/github'
