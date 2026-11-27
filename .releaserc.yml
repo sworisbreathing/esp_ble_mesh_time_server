@@ -1,0 +1,19 @@
+branches:
+  - '+([0-9])?(.{+([0-9]),x}).x'
+  - 'main'
+  - name: 'beta'
+    prerelease: true
+  - name: 'alpha'
+    prerelease: true
+
+plugins:
+  - '@semantic-release/commit-analyzer'
+  - '@semantic-release/release-notes-generator'
+  - - '@semantic-release/exec'
+    - prepareCmd: >
+        sed -i 's/^version: .*/version: "${nextRelease.version}"/' idf_component.yml
+  - - '@semantic-release/git'
+    - assets:
+        - idf_component.yml
+      message: "chore(release): ${nextRelease.version} [skip release]\n\n${nextRelease.notes}"
+  - '@semantic-release/github'
