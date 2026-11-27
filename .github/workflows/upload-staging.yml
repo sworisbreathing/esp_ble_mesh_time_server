@@ -3,6 +3,10 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+  release:
+    types:
+      - prereleased
 
 jobs:
   validate_staging:
