@@ -35,15 +35,3 @@ jobs:
           components: "esp_ble_mesh_time_server: ."
           namespace: "sworisbreathing"
           registry_url: https://components-staging.espressif.com/
-
-  oidc_debug_test:
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: ubuntu-latest
-    name: A test of the oidc debugger
-    steps:
-      - name: Debug OIDC Claims
-        uses: steve-todorov/oidc-debugger-action@v1
-        with:
-          audience: '${{ github.server_url }}/${{ github.repository }}'
