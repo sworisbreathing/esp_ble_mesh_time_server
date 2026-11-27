@@ -15,8 +15,6 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: espressif/upload-components-ci-action@v2
         with:
           components: "esp_ble_mesh_time_server: ."
@@ -32,8 +30,6 @@ jobs:
       - validate_staging
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - uses: espressif/upload-components-ci-action@v2
         with:
           components: "esp_ble_mesh_time_server: ."
