@@ -18,6 +18,7 @@ files:
     - "**/.zed/**/*"
     - "**/.pre-commit-config.yaml"
     - "**/.clangd"
+    - "**/.releaserc.yml"
 
 dependencies:
   idf:
