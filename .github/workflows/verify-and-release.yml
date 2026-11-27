@@ -57,5 +57,6 @@ jobs:
     uses: $/.github/workflows/upload-staging.yml
     permissions:
       id-token: write
+      contents: read
     with:
       release_sha: ${{ needs.release.outputs.release_sha }}
