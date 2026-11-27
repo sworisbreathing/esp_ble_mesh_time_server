@@ -14,5 +14,6 @@ plugins:
         sed -i 's/^version: .*/version: "${nextRelease.version}"/' idf_component.yml
   - - '@semantic-release/git'
     - assets:
-      - idf_component.yml
+        - idf_component.yml
+      message: "chore(release): ${nextRelease.version} [skip release]\n\n${nextRelease.notes}"
   - '@semantic-release/github'
