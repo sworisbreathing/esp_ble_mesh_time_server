@@ -9,4 +9,7 @@ branches:
 plugins:
   - '@semantic-release/commit-analyzer'
   - '@semantic-release/release-notes-generator'
+  - - '@semantic-release/exec'
+    - prepareCmd: >
+        sed -i '0,/^version: .*/s//version: "${nextRelease.version}"/' idf_component.yml
   - '@semantic-release/github'
